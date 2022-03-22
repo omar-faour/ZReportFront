@@ -231,7 +231,7 @@ const PhysicalCards = (props)=>{
                             rowValues.push(row?.amount_f ??  0)
                               return (
                                 <TableCell>
-                                  <CurrencyFormatter onChange={(e)=>onChange(e, row, rowHeader, session)} setRows={setRows} row={row} value={row?.amount_f ?? 0} currency={rowHeader?.currency?.code ?? 'USD'}/>
+                                  <CurrencyFormatter onChange={(e)=>onChange(e, row, rowHeader, session)} row={row} value={row?.amount_f ?? 0} currency={rowHeader?.currency?.code ?? 'USD'}/>
                                 </TableCell>
                               )
                           })}

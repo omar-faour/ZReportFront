@@ -15,7 +15,7 @@ const useStyles = makeStyles({
 
 const NumberFormatCustom = React.forwardRef(function NumberFormatCustom(props, ref) {
 
-    const {onChange, currency, ...other } = props;
+    const {onChange, currency, isCurrency, ...other } = props;
     return (
       <NumberFormat
         {...other}
@@ -30,7 +30,7 @@ const NumberFormatCustom = React.forwardRef(function NumberFormatCustom(props, r
         }}
         thousandSeparator
         isNumericString
-        prefix={getSymbolFromCurrency(props.currency)}
+        prefix={isCurrency? getSymbolFromCurrency(props.currency): ''}
       />
     );
   });
@@ -49,10 +49,11 @@ const CurrencyFormatter = (props)=>{
             onBlur={onChange}
             size="small"
             inputProps={{          
-                'currency': currency,                
+                'currency': currency,
+                'isCurrency': isCurrency              
               }}
             InputProps={{
-                inputComponent: isCurrency? NumberFormatCustom : null,
+                inputComponent: NumberFormatCustom,
                 disableUnderline: true
             }}
 

@@ -11,6 +11,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import SystemData from '../SystemData/';
 import PhysicalCards from '../PhysicalCards';
 import PhysicalCash from '../PhysicalCash';
+import BankDetails from '../BankDetails';
 
 import {storeState} from '../../states';
 import {supabase} from "../../Configs/supabase"
@@ -75,6 +76,7 @@ const ZReport = (props)=>{
         <SystemData store={store} selectedStore={selectedStore} sessions={sessions} setSavedChanges={setSavedChanges}/>
         <PhysicalCards store={store} selectedStore={selectedStore} sessions={sessions} setSavedChanges={setSavedChanges}/>
         <PhysicalCash store={store} selectedStore={selectedStore} sessions={sessions} setSavedChanges={setSavedChanges}/>
+        <BankDetails store={store} selectedStore={selectedStore} sessions={sessions} setSavedChanges={setSavedChanges}/>
       </Box>
     </Box>
   );
