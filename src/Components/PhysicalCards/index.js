@@ -1,7 +1,6 @@
-import React, {useEffect, useState} from "react";
+import React, { useState, useEffect } from 'react';
 import {supabase} from "../../Configs/supabase"
 
-import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box'
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -10,29 +9,29 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
+import Skeleton from '@mui/material/Skeleton';
+
 import { makeStyles } from "@mui/styles";
 
-import CurrencyFormatter from '../CurrencyFormatter'
+import CurrencyFormatter from '../CurrencyFormatter';
 
-  
-  const useStyles=makeStyles({
+
+const useStyles=makeStyles({
     tableHeaders: {
       backgroundColor: 'rgba(0,0,0,0.04)',
     }
   })
 
 
-  const SystemData = (props) => {
+const PhysicalCards = (props)=>{
+
     const {store, selectedStore, sessions, setSavedChanges} = props;
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
     const [rowHeaders, setRowHeaders] = useState([]); 
     const [totalRowHeaders, setTotalRowHeaders] = useState([]); 
     const [rows, setRows] = useState([]); 
-    const [currencies, setCurrencies] = useState([]);
-    const [selectedDate, setSelectedDate] = useState(null);
 
     let values = {fields: [], totals: []};
 
@@ -64,16 +63,16 @@ import CurrencyFormatter from '../CurrencyFormatter'
                 const rate_2_value = rate_2_value[0].rate;
                 amount_2 = amount_1 * rate_2_value;
 
-                updatedDetails['amount_f'] = parseFloat(targetValue)
-                updatedDetails['amount_1'] = amount_1
+                updatedDetails['amount_f'] = parseFloat(targetValue);
+                updatedDetails['amount_1'] = amount_1;
                 updatedDetails['amount_2'] = amount_2;
             }
         }
         
-          const{data, error} = await supabase.from('z_details').update(updatedDetails).eq('id', row.id);
+          const{data, error} = await supabase.from('z_physical_cards').update(updatedDetails).eq('id', row.id);
 
           if(data){
-          setRows(oldRows=>{
+            setRows(oldRows=>{
               const filteredRows = oldRows.filter(oldRow=>oldRow.id !== row.id)
               return [...filteredRows, {...row, ...updatedDetails}]
           })
@@ -105,7 +104,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
         }else if(rowHeader.currency.id === 2){
           const {data: rate_1_value} = await supabase.from('exchanges').select('*').eq('currency', 1).lte('date', z_date).order('date', {ascending:false}).limit(1);
           const {data: rate_2_value} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', z_date).order('date', {ascending:false}).limit(1);
-          newData['rate'] = parseFloat(rate_1_value[0].id);
+          newData['rate'] = parseFloat(rate_2_value[0].id);
           newData['amount_f'] = parseFloat(targetValue);
           newData['amount_2'] = parseFloat(targetValue);
           newData['amount_1'] = parseFloat(targetValue)/parseFloat(rate_2_value[0].rate);
@@ -118,12 +117,17 @@ import CurrencyFormatter from '../CurrencyFormatter'
           newData['amount_2'] = parseFloat(targetValue)*parseFloat(rate_1_value[0].rate)*parseFloat(rate_2_value[0].rate);
         }
 
-        const {data, error} = await supabase.from('z_details').insert(newData)
-        if(data) {
-
-          console.log('INSERT: ', data)
+        const {data, error} = await supabase.from('z_physical_cards').insert(newData)
+        if(data){
+          console.log("Added")
+            // const {data: paymentDetails} = await supabase.from('payment_types').select('*').eq('id', rowHeader.payment.id)
+            // setRows(oldRows=>{
+            //     const newData = [...oldRows, {...data[0], ptid: paymentDetails[0]}]
+            //     console.log("New Data: ", newData)
+            //     return newData
+            // })
         }
-        if(error) {console.log('insert error: ', error)}
+        if(error) console.log('insert error: ', error)
       }
       
       
@@ -136,11 +140,11 @@ import CurrencyFormatter from '../CurrencyFormatter'
 
         (async ()=>{
 
-          const {data: paymentsData, error: paymentsError} = await supabase.from('payment_types').select('*, type_of(*)').not('type_of', 'is', null)
+
+          const {data: paymentsData, error: paymentsError} = await supabase.from('payment_types').select('*, type_of(*)').eq('type_of', 2)
             if(paymentsData){
               const {data: currencyData, error: currencyError} = await supabase.from('currencies').select('*').in('id', (await supabase.from('countries').select('*').eq('id', store.country)).data[0].currencies)
               if(currencyData){
-                setCurrencies(currencyData)
                 let array = [];
                 paymentsData.map(payment=>{
                   return currencyData.map(currency=>{
@@ -151,7 +155,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
               }
             }
 
-          const {data: paymentTypesData, error: paymentTypesError} = await supabase.from('payment_types').select('*, type_of(*)').is('type_of', null)
+          const {data: paymentTypesData, error: paymentTypesError} = await supabase.from('payment_types').select('*, type_of(*)').eq('id', 2)
               if(paymentTypesData){
                 let array =[];
                 paymentTypesData.map(payment=>{
@@ -163,20 +167,19 @@ import CurrencyFormatter from '../CurrencyFormatter'
               if(paymentTypesError){
                 console.log("paymentDataError: ", paymentTypesError)
               }
+            
 
-          await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', 1).then(({data})=>{
-            if(data) setRows(data)
-          });
-          const z_details = supabase.from('z_details').on('*', async payload=>{
-            const {data, error} = await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', 1);
-
-            if(data){
-              setRows(data);
-              setSavedChanges(true);
-            }
-          }).subscribe()
+            await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', 1).then(({data})=>{
+              if(data) setRows(data)
+            });
+            const z_physical_cards = supabase.from('z_physical_cards').on('*', async payload=>{
+              const {data, error} = await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', 1);
+              if(data){
+                setRows(data);
+                setSavedChanges(true)
+              }
+            }).subscribe()
           
-
         })(),
 
       ]).finally(()=>{
@@ -189,22 +192,20 @@ import CurrencyFormatter from '../CurrencyFormatter'
       fetchData()
     },[selectedStore])
 
-  useEffect(()=>{
-    console.log("Rows", rows)
-  },[rows])
-
-
-
-
     return (
       <Box sx={{padding: '10px 0'}}>
+        <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>
+            <Typography variant="h6" gutterBottom component="div">
+                Physical cards (Fill it from Summary Reports from Machines)
+            </Typography>
+        </Box>
         {
           loading ? 
-          // <Box sx={{position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)'}}>
-          //   <CircularProgress />
-          // </Box>
-          <Skeleton variant="rectangular" height={400} />
-          :<>
+        //   <Box sx={{position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)'}}>
+        //     <CircularProgress />
+        //   </Box>
+            <Skeleton variant="rectangular" height={400} />
+          :
           <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'center'}}>
               <TableContainer component={Paper}>
                 <Table size="small" sx={{ minWidth: 650 }} aria-label="simple table">
@@ -285,7 +286,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
                      )
                      
                     })}
-                    <TableRow className={classes.tableHeaders}>
+                    {/* <TableRow className={classes.tableHeaders}>
                       <TableCell><b>Total</b></TableCell>
 
                       {sessions.map((session, index)=>{
@@ -317,16 +318,15 @@ import CurrencyFormatter from '../CurrencyFormatter'
                           </TableCell>
                         )
                       })()}
-                    </TableRow>
+                    </TableRow> */}
                   </TableBody>
                 </Table>
               </TableContainer>
 
           </Box>
-          </>
         }
       </Box>
     );
-  }
-  
-  export default SystemData;
+}
+
+export default PhysicalCards;
