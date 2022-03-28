@@ -24,13 +24,13 @@ const useStyles=makeStyles({
     }
   })
 
-const BankDetails = (props)=>{
+const PayByPhoneDetails = (props)=>{
 
     const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
 
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
-    const [banks, setBanks] = useState([]);
+    const [payByPhoneBanks, setPayByPhoneBanks] = useState([]);
     const [rows, setRows] = useState([]);
     let bankSummations = [];
 
@@ -38,16 +38,18 @@ const BankDetails = (props)=>{
         setSavedChanges(false);
         const targetValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
         if(row){
-            const {data, error} = await supabase.from('z_bank_details').update({value: targetValue}).eq('id', row.id);
-            if(data) setSavedChanges(true);
+            const {data, error} = await supabase.from('z_pbp_details').update({value: targetValue}).eq('id', row.id);
+            if(data) {
+                setSavedChanges(true);
+            }
         }else if(!row){
             let newData = {
                 zheader_id: zheader,
-                bank_id: bank.id,
+                pay_by_phone_id: bank.id,
                 value: targetValue,
                 session_id: session.session_id
             }
-            const {data, error} = await supabase.from('z_bank_details').insert(newData);
+            const {data, error} = await supabase.from('z_pbp_details').insert(newData);
             if(data) {
                 setSavedChanges(true);
             }
@@ -61,16 +63,16 @@ const BankDetails = (props)=>{
         Promise.allSettled([
 
             (async()=>{
-                await supabase.from('banks').select('*').then(({data})=>{
-                    if(data) setBanks(data);
+                await supabase.from('pay_by_phone_banks').select('*').then(({data})=>{
+                    if(data) setPayByPhoneBanks(data);
                 });
 
-                await supabase.from('z_bank_details').select('*').then(({data})=>{
+                await supabase.from('z_pbp_details').select('*').then(({data})=>{
                     if(data) setRows(data);
                 });
 
-                const z_bank_details = supabase.from('z_bank_details').on('*', async payload=>{
-                    await supabase.from('z_bank_details').select('*').then(({data})=>{
+                const z_pbp_details = supabase.from('z_pbp_details').on('*', async payload=>{
+                    await supabase.from('z_pbp_details').select('*').then(({data})=>{
                         if(data) setRows(data);
                     });    
                 }).subscribe()
@@ -89,7 +91,7 @@ const BankDetails = (props)=>{
         <Box sx={{padding: '10px 0'}}>
             <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>
                 <Typography variant="h6" gutterBottom component="div">
-                    Bank Details
+                    Pay-By-Phone Details
                 </Typography>
             </Box>
             {loading? <Skeleton variant="rectangular" height={400} />
@@ -99,7 +101,7 @@ const BankDetails = (props)=>{
                         <TableHead>
                             <TableRow className={classes.tableHeaders}>
                                 <TableCell width={200}></TableCell>
-                                {banks?.map((bank,index)=>{
+                                {payByPhoneBanks?.map((bank,index)=>{
                                     bankSummations[index] = 0;
                                     return <TableCell>{bank.description}</TableCell>
                                 })}
@@ -112,8 +114,8 @@ const BankDetails = (props)=>{
                                 let sessionSum = 0;
                                 return <TableRow>
                                     <TableCell width={200}>{session.session_name}</TableCell>
-                                    {banks?.map((bank,index)=>{
-                                        const row = sessionRows.find(row=>row.bank_id === bank.id)
+                                    {payByPhoneBanks?.map((bank,index)=>{
+                                        const row = sessionRows.find(row=>row.pay_by_phone_id === bank.id)
                                         bankSummations[index] += row?.value || 0
                                         sessionSum += row?.value || 0
                                         return <TableCell><CurrencyFormatter onChange={(e)=>onChange(e, row, session, bank)} value={row?.value || 0}/></TableCell>
@@ -124,7 +126,7 @@ const BankDetails = (props)=>{
 
                             <TableRow>
                                 <TableCell><b>Total</b></TableCell>
-                                {banks.map((bank,index)=>{
+                                {payByPhoneBanks.map((bank,index)=>{
                                     return <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations[index]} disabled/></TableCell>
                                 })}
                                 <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations.reduce((partialSum, a) => partialSum + a, 0)} disabled/></TableCell>
@@ -138,4 +140,4 @@ const BankDetails = (props)=>{
     );
 }
 
-export default BankDetails;
+export default PayByPhoneDetails;

@@ -24,7 +24,7 @@ const useStyles=makeStyles({
   })
 
 
-const PhysicalCards = (props)=>{
+const PhysicalPayByPhone = (props)=>{
 
     const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
     const classes = useStyles();
@@ -69,7 +69,7 @@ const PhysicalCards = (props)=>{
             }
         }
         
-          const{data, error} = await supabase.from('z_physical_cards').update(updatedDetails).eq('id', row.id);
+          const{data, error} = await supabase.from('z_physical_pbp').update(updatedDetails).eq('id', row.id);
 
           if(data){
             setRows(oldRows=>{
@@ -114,8 +114,8 @@ const PhysicalCards = (props)=>{
           newData['amount_2'] = parseFloat(targetValue)/parseFloat(rate_1_value[0].rate)*parseFloat(rate_2_value[0].rate);
         }
 
-        const {data, error} = await supabase.from('z_physical_cards').insert(newData)
-        
+        const {data, error} = await supabase.from('z_physical_pbp').insert(newData)
+
         if(error) console.log('insert error: ', error)
       }
       
@@ -130,7 +130,7 @@ const PhysicalCards = (props)=>{
         (async ()=>{
 
 
-          const {data: paymentsData, error: paymentsError} = await supabase.from('payment_types').select('*, type_of(*)').eq('type_of', 2)
+          const {data: paymentsData, error: paymentsError} = await supabase.from('payment_types').select('*, type_of(*)').eq('type_of', 3)
             if(paymentsData){
               const {data: currencyData, error: currencyError} = await supabase.from('currencies').select('*').in('id', (await supabase.from('countries').select('*').eq('id', store.country)).data[0].currencies)
               if(currencyData){
@@ -144,7 +144,7 @@ const PhysicalCards = (props)=>{
               }
             }
 
-          const {data: paymentTypesData, error: paymentTypesError} = await supabase.from('payment_types').select('*, type_of(*)').eq('id', 2)
+          const {data: paymentTypesData, error: paymentTypesError} = await supabase.from('payment_types').select('*, type_of(*)').eq('id', 3)
               if(paymentTypesData){
                 let array =[];
                 paymentTypesData.map(payment=>{
@@ -161,8 +161,8 @@ const PhysicalCards = (props)=>{
             await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
               if(data) setRows(data)
             });
-            const z_physical_cards = supabase.from('z_physical_cards').on('*', async payload=>{
-              const {data, error} = await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader);
+            const z_physical_pbp = supabase.from('z_physical_pbp').on('*', async payload=>{
+              const {data, error} = await supabase.from('z_physical_pbp').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader);
               if(data){
                 setRows(data);
                 setSavedChanges(true)
@@ -185,7 +185,7 @@ const PhysicalCards = (props)=>{
       <Box sx={{padding: '10px 0'}}>
         <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>
             <Typography variant="h6" gutterBottom component="div">
-                Physical cards
+                Physical PayByPhone
             </Typography>
         </Box>
         {
@@ -285,4 +285,4 @@ const PhysicalCards = (props)=>{
     );
 }
 
-export default PhysicalCards;
+export default PhysicalPayByPhone;

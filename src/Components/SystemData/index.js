@@ -25,7 +25,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
 
 
   const SystemData = (props) => {
-    const {store, selectedStore, sessions, setSavedChanges} = props;
+    const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
     const [rowHeaders, setRowHeaders] = useState([]); 
@@ -58,7 +58,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
             updatedDetails['amount_1'] = parseFloat(targetValue)/parseFloat(rate_value[0].rate);
         }else if(rowHeader.currency.id !== 1 && rowHeader.currency.id !== 1){
             const {data: rate_1_value, error} = await supabase.from('exchanges').select('*').eq('currency', rowHeader.currency.id).lte('date', row.z_date).order('date', {ascending:false}).limit(1);;
-            amount_1 = parseFloat(targetValue)*rate_1_value;
+            amount_1 = parseFloat(targetValue)/rate_1_value;
             const {data: rate_2_value, error: rate_2_Error} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
             if(rate_2_value){
                 const rate_2_value = rate_2_value[0].rate;
@@ -83,9 +83,6 @@ import CurrencyFormatter from '../CurrencyFormatter'
           }
 
       }else if(!row && targetValue && targetValue !== 0){
-        console.log(targetValue)
-        console.log("Not Row: ", rowHeader)
-        console.log('session' , session)
         let z_date = new Date().toISOString().split('T')[0]
         let newData = {
           z_date: z_date,
@@ -93,7 +90,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
           store_code: selectedStore,
           ptid: rowHeader.payment.id,
           cid: rowHeader.currency.id,
-          zheader_id : 1
+          zheader_id : zheader
         }
         if(rowHeader.currency.id === 1){
           const {data: rate_1_value} = await supabase.from('exchanges').select('*').eq('currency', 1).lte('date', z_date).order('date', {ascending:false}).limit(1);
@@ -119,10 +116,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
         }
 
         const {data, error} = await supabase.from('z_details').insert(newData)
-        if(data) {
 
-          console.log('INSERT: ', data)
-        }
         if(error) {console.log('insert error: ', error)}
       }
       
@@ -164,16 +158,17 @@ import CurrencyFormatter from '../CurrencyFormatter'
                 console.log("paymentDataError: ", paymentTypesError)
               }
 
-          await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', 1).then(({data})=>{
+          await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
             if(data) setRows(data)
           });
           const z_details = supabase.from('z_details').on('*', async payload=>{
-            const {data, error} = await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', 1);
-
-            if(data){
-              setRows(data);
-              setSavedChanges(true);
-            }
+            await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
+              if(data){
+                console.log("CHANGES")
+                setRows(data);
+                setSavedChanges(true);
+              }
+            });
           }).subscribe()
           
 
@@ -188,10 +183,6 @@ import CurrencyFormatter from '../CurrencyFormatter'
     useEffect(()=>{
       fetchData()
     },[selectedStore])
-
-  useEffect(()=>{
-    console.log("Rows", rows)
-  },[rows])
 
 
 

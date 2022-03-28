@@ -163,7 +163,7 @@ const App = (props) => {
             <Typography variant="h6" noWrap component="div">
               Z-Report
             </Typography>
-            <Box onClick={()=>console.log('clicked')} sx={{cursor: 'pointer', display: 'flex', flexDirection: 'row', alignItems: 'center', alignContent: 'center'}}>
+            <Box sx={{cursor: 'pointer', display: 'flex', flexDirection: 'row', alignItems: 'center', alignContent: 'center'}}>
               <Tooltip title="Profile">
                 <IconButton onClick= {handleProfileMenu}>
                   <Avatar />

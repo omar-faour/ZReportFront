@@ -59,7 +59,6 @@ const SelectStore = (props)=>{
 
 
     const onLevelChange = (e)=>{
-        console.log(`${e.target.name}: ${e.target.value}`)
         setSelectedLevels({...selectedLevels, [e.target.name]: e.target.value});
     }
 
@@ -75,7 +74,6 @@ const SelectStore = (props)=>{
            
 
             if(user_access_level){
-                console.log("LEVELS: ", user_access_level)
                 const countries = (await supabase.from('countries').select('*').in('id', user_access_level[0].countries)).data
                 const cities = (await supabase.from('cities').select('*').in('id', user_access_level[0].cities)).data
                 const stores = (await supabase.from('stores').select('*').in('id', user_access_level[0].stores)).data

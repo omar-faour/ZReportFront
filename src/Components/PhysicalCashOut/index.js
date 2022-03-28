@@ -24,7 +24,7 @@ const useStyles=makeStyles({
   })
 
 
-const PhysicalCash = (props)=>{
+const PhysicalCashOut = (props)=>{
     const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
     const classes = useStyles();
 
@@ -34,22 +34,23 @@ const PhysicalCash = (props)=>{
 
     const onChange = async (e, row, domination, session, currency)=>{
         setSavedChanges(false);
+        const targetValue = e.target.value || 0
         if(row){
-            const {data, error} = await supabase.from('z_physical_cash').update({count: e.target.value}).eq('id', row.id);
+            const {data, error} = await supabase.from('z_physical_cash_out').update({count: targetValue}).eq('id', row.id);
             if(data) setSavedChanges(true)
-        }else if(!row){
+        }else if(!row && targetValue && targetValue!==0){
             const z_date = new Date().toISOString().split('T')[0]
             let newData = {
                 cid: currency.id,
                 zheader_id: zheader,
                 domination: domination,
-                count: e.target.value,
+                count: targetValue,
                 store_code: selectedStore,
                 session_id: session.session_id,
                 rate: await (await supabase.from('exchanges').select('*').eq('currency', currency.id).lte('date', z_date).order('date', {ascending:false}).limit(1)).data[0].id,
                 z_date: z_date
             }
-            const {data, error} = await supabase.from('z_physical_cash').insert(newData);
+            const {data, error} = await supabase.from('z_physical_cash_out').insert(newData);
             if(data){
                 setSavedChanges(true)
             }
@@ -72,11 +73,11 @@ const PhysicalCash = (props)=>{
             })(),
 
             (async ()=>{
-                await supabase.from('z_physical_cash').select('*').eq('zheader_id', zheader).then(({data})=>{
+                await supabase.from('z_physical_cash_out').select('*').eq('zheader_id', zheader).then(({data})=>{
                     if(data) setRows(data);
                 });
-                const z_physical_cash = supabase.from('z_physical_cash').on('*', async payload=>{
-                    await supabase.from('z_physical_cash').select('*').eq('zheader_id', zheader).then(({data})=>{
+                const z_physical_cash = supabase.from('z_physical_cash_out').on('*', async payload=>{
+                    await supabase.from('z_physical_cash_out').select('*').eq('zheader_id', zheader).then(({data})=>{
                         if(data) setRows(data);
                     });
                 }).subscribe()
@@ -103,7 +104,7 @@ const PhysicalCash = (props)=>{
                     <Box sx={{padding: '10px 0'}}>
                         <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>
                             <Typography variant="h6" gutterBottom component="div">
-                                {`Physical Cash (${currency.code})`}
+                                {`Physical Cash Out (${currency.code})`}
                             </Typography>
                         </Box>
                         {loading? <Skeleton variant="rectangular" height={400} />
@@ -128,8 +129,8 @@ const PhysicalCash = (props)=>{
                                                         <TableCell width={200}>{domination}</TableCell>
                                                         {sessions.map((session, index)=>{
                                                             const row = dominationRows.find(row=>row.session_id === session.session_id)
-                                                            sessionSummations[index] += row?.count*domination || 0;
-                                                            dominationSum += row?.count || 0;
+                                                            sessionSummations[index] -= row?.count*domination || 0;
+                                                            dominationSum -= row?.count || 0;
                                                             return <TableCell>
                                                                     <CurrencyFormatter onChange={(e)=>onChange(e, row, domination, session, currency)} row={row} value={row?.count || 0} isCurrency={false}/>
                                                             </TableCell>
@@ -156,4 +157,4 @@ const PhysicalCash = (props)=>{
     )
 }
 
-export default PhysicalCash;
+export default PhysicalCashOut;
