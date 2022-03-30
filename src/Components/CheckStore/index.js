@@ -81,7 +81,8 @@ const SelectStore = (props)=>{
                 if(countries.length === 1 && cities.length === 1 && stores.length === 1){
                     // setSelectedLevels({country: countries[0], city: cities[0], store: stores[0]});
                     storeState.update(s=>s={country: countries[0].id, city: cities[0].id, store: stores[0].id});
-                    history.push('/ZReport')
+                    // history.push('/ZReport')
+                    history.push('/')
                 }else{
 
                     setSelectedLevels({country: countries[0].id, city: cities[0].id, store: stores[0].id});

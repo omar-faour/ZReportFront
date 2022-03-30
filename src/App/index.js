@@ -31,7 +31,8 @@ import ListItemText from '@mui/material/ListItemText';
 import InboxIcon from '@mui/icons-material/MoveToInbox';
 import MailIcon from '@mui/icons-material/Mail';
 
-import ZReport from '../Components/ZReport/ZReport';
+import ZReport from '../Pages/ZReport';
+import HomeScreen from '../Pages/HomeScreen'
 
 import {
   Switch,
@@ -40,7 +41,7 @@ import {
   useLocation
 } from "react-router-dom";
 
-
+import {selectedDateState, zheaderIdState} from '../states'
 import {routes} from '../routs';
 
 const drawerWidth = 240;
@@ -128,6 +129,8 @@ const App = (props) => {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = React.useState(false);
+  const selectedDate = selectedDateState.useState(s=>s);
+  const zheaderId = zheaderIdState.useState(s=>s);
   let location = useLocation();
   
   const handleProfileMenu = ()=>{
@@ -228,14 +231,16 @@ const App = (props) => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
-          <Switch>
+          {/* <Switch>
             <Route exact path="/">
-              <h2>Home Screen</h2>
+              <HomeScreen />
             </Route>
-            <Route path="/ZReport">
+            <Route path="/ZReport/:id">
               <ZReport />
             </Route>
-          </Switch>
+          </Switch> */}
+        {(!selectedDate && !zheaderId) && <HomeScreen />}
+        {(selectedDate && zheaderId) && <ZReport />}
       </Box>
     </Box>
   );

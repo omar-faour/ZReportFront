@@ -8,9 +8,9 @@ export const routes = [
         text: "Home",
         icon: <HomeIcon/>
     },
-    {
-        path: "/ZReport",
-        text: "Z Report",
-        icon: <SummarizeIcon/>
-    },
+    // {
+    //     path: "/ZReport/:id",
+    //     text: "Z Report",
+    //     icon: <SummarizeIcon/>
+    // },
 ]

@@ -43,6 +43,8 @@ const SummaryDetails = (props)=> {
     const [zPhysicalCards, setZPhysicalCards] = useState([]);
     const [zPhysicalPayByPhone, setZPhysicalPayByPhone] = useState([]);
     const [zPhysicalCash, setZPhysicalCash] = useState([]);
+    const [zPhysicalCashOut, setZPhysicalCashOut] = useState([]);
+    const [zPhysicalCashIn, setZPhysicalCashIn] = useState([]);
     const [currency,setCurrency] = useState(null);
     const [zDetails, setZDetails] = useState([]);
     const [pbpBanks, setPbpBanks] = useState([]);
@@ -63,7 +65,7 @@ const SummaryDetails = (props)=> {
     let zPhysialOtherCardsTotal = getPaymentTotal(zPhysicalCards.filter(row=>row.ptid === 7))
     let zPhysicalCardsTotal = zPhysialVisaTotal + zPhysialMasterTotal + zPhysialOtherCardsTotal;
     let zPhysicalPayByPhoneTotal =  getPaymentTotal(zPhysicalPayByPhone)
-    let zPhysicalCashTotal = getBankingTotal(zPhysicalCash)
+    let zPhysicalCashTotal = getBankingTotal(zPhysicalCash) + getBankingTotal(zPhysicalCashOut) + getBankingTotal(zPhysicalCashIn)
     let cashDifference =  Math.round((zPhysicalCashTotal-zCashSales + Number.EPSILON) * 100) / 100;
     let cardsDifference = Math.round((zPhysicalCardsTotal-zCardsTotal + Number.EPSILON) * 100) / 100;
     let payByPhoneDifference = Math.round((zPhysicalPayByPhoneTotal-zPayByPhoneTotal + Number.EPSILON) * 100) / 100;
@@ -136,6 +138,24 @@ const SummaryDetails = (props)=> {
                 const {data, error} = await supabase.from('z_physical_cash').select('*, rate(*)');
                 if(data){
                     setZPhysicalCash(data);
+                }
+                if(error){
+                    console.log(error);
+                }
+            })(),
+            (async ()=>{
+                const {data, error} = await supabase.from('z_physical_cash_out').select('*, rate(*)');
+                if(data){
+                    setZPhysicalCashOut(data);
+                }
+                if(error){
+                    console.log(error);
+                }
+            })(),
+            (async ()=>{
+                const {data, error} = await supabase.from('z_physical_cash_in').select('*, rate(*)');
+                if(data){
+                    setZPhysicalCashIn(data);
                 }
                 if(error){
                     console.log(error);

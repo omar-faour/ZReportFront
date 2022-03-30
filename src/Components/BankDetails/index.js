@@ -12,6 +12,8 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
+
+
 import { makeStyles } from "@mui/styles";
 
 
@@ -58,6 +60,7 @@ const BankDetails = (props)=>{
     }
 
     const fetchData = async ()=>{
+        console.log("Banking")
         Promise.allSettled([
 
             (async()=>{
@@ -87,53 +90,47 @@ const BankDetails = (props)=>{
 
     return (
         <Box sx={{padding: '10px 0'}}>
-            <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>
-                <Typography variant="h6" gutterBottom component="div">
-                    Bank Details
-                </Typography>
-            </Box>
-            {loading? <Skeleton variant="rectangular" height={400} />
-            :<Box>
-                <TableContainer component={Paper}>
-                    <Table size="small" sx={{ minWidth: 650 }} aria-label="simple table">
-                        <TableHead>
-                            <TableRow className={classes.tableHeaders}>
-                                <TableCell width={200}></TableCell>
-                                {banks?.map((bank,index)=>{
-                                    bankSummations[index] = 0;
-                                    return <TableCell>{bank.description}</TableCell>
-                                })}
-                                <TableCell><b>TOTAL</b></TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {sessions?.map((session)=>{
-                                const sessionRows = rows.filter(row=>row.session_id === session.session_id)
-                                let sessionSum = 0;
-                                return <TableRow>
-                                    <TableCell width={200}>{session.session_name}</TableCell>
-                                    {banks?.map((bank,index)=>{
-                                        const row = sessionRows.find(row=>row.bank_id === bank.id)
-                                        bankSummations[index] += row?.value || 0
-                                        sessionSum += row?.value || 0
-                                        return <TableCell><CurrencyFormatter onChange={(e)=>onChange(e, row, session, bank)} value={row?.value || 0}/></TableCell>
+                    {loading? <Skeleton variant="rectangular" height={400} />
+                    :<Box>
+                        <TableContainer component={Paper}>
+                            <Table size="small" sx={{ minWidth: 650 }} aria-label="simple table">
+                                <TableHead>
+                                    <TableRow className={classes.tableHeaders}>
+                                        <TableCell width={200}></TableCell>
+                                        {banks?.map((bank,index)=>{
+                                            bankSummations[index] = 0;
+                                            return <TableCell>{bank.description}</TableCell>
+                                        })}
+                                        <TableCell><b>TOTAL</b></TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {sessions?.map((session)=>{
+                                        const sessionRows = rows.filter(row=>row.session_id === session.session_id)
+                                        let sessionSum = 0;
+                                        return <TableRow>
+                                            <TableCell width={200}>{session.session_name}</TableCell>
+                                            {banks?.map((bank,index)=>{
+                                                const row = sessionRows.find(row=>row.bank_id === bank.id)
+                                                bankSummations[index] += row?.value || 0
+                                                sessionSum += row?.value || 0
+                                                return <TableCell><CurrencyFormatter onChange={(e)=>onChange(e, row, session, bank)} value={row?.value || 0}/></TableCell>
+                                            })}
+                                            <TableCell className={classes.tableHeaders}><CurrencyFormatter value={sessionSum} disabled/></TableCell>
+                                        </TableRow>
                                     })}
-                                    <TableCell className={classes.tableHeaders}><CurrencyFormatter value={sessionSum} disabled/></TableCell>
-                                </TableRow>
-                            })}
 
-                            <TableRow>
-                                <TableCell><b>Total</b></TableCell>
-                                {banks.map((bank,index)=>{
-                                    return <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations[index]} disabled/></TableCell>
-                                })}
-                                <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations.reduce((partialSum, a) => partialSum + a, 0)} disabled/></TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Box>}
-
+                                    <TableRow>
+                                        <TableCell><b>Total</b></TableCell>
+                                        {banks.map((bank,index)=>{
+                                            return <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations[index]} disabled/></TableCell>
+                                        })}
+                                        <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations.reduce((partialSum, a) => partialSum + a, 0)} disabled/></TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Box>}
         </Box>
     );
 }

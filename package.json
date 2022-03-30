@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@date-io/date-fns": "^2.13.1",
     "@emotion/react": "^11.8.2",
     "@emotion/styled": "^11.8.1",
     "@handsontable/react": "^11.1.0",
-    "@mui/icons-material": "^5.5.0",
+    "@mui/icons-material": "^5.5.1",
+    "@mui/lab": "^5.0.0-alpha.74",
     "@mui/material": "^5.5.0",
     "@mui/styles": "^5.5.1",
     "@supabase/supabase-js": "^1.31.0",

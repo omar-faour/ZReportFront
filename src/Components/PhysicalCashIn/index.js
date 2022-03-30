@@ -37,9 +37,9 @@ const PhysicalCashOut = (props)=>{
 
     const onNoteChange = async (e, domination, id = null)=>{
         if(!id){
-            await supabase.from('cash_out_notes').insert({domination: domination, note: e.target.value, zheader_id: zheader})
+            await supabase.from('cash_in_notes').insert({domination: domination, note: e.target.value, zheader_id: zheader})
         }else if(id){
-            await supabase.from('cash_out_notes').update({note: e.target.value}).eq('id', id);
+            await supabase.from('cash_in_notes').update({note: e.target.value}).eq('id', id);
         }
     }
 
@@ -47,7 +47,7 @@ const PhysicalCashOut = (props)=>{
         setSavedChanges(false);
         const targetValue = parseInt(e.target.value.replace(/[^0-9.]/g, '')) || 0
         if(row){
-            const {data, error} = await supabase.from('z_physical_cash_out').update({count: targetValue}).eq('id', row.id);
+            const {data, error} = await supabase.from('z_physical_cash_in').update({count: targetValue}).eq('id', row.id);
             if(data) setSavedChanges(true)
         }else if(!row && targetValue && targetValue!==0){
             const z_date = new Date().toISOString().split('T')[0]
@@ -61,7 +61,7 @@ const PhysicalCashOut = (props)=>{
                 rate: await (await supabase.from('exchanges').select('*').eq('currency', currency.id).lte('date', z_date).order('date', {ascending:false}).limit(1)).data[0].id,
                 z_date: z_date
             }
-            const {data, error} = await supabase.from('z_physical_cash_out').insert(newData);
+            const {data, error} = await supabase.from('z_physical_cash_in').insert(newData);
             if(data){
                 setSavedChanges(true)
             }
@@ -84,11 +84,11 @@ const PhysicalCashOut = (props)=>{
             })(),
 
             (async ()=>{
-                await supabase.from('z_physical_cash_out').select('*').eq('zheader_id', zheader).then(({data})=>{
+                await supabase.from('z_physical_cash_in').select('*').eq('zheader_id', zheader).then(({data})=>{
                     if(data) setRows(data);
                 });
-                const z_physical_cash = supabase.from('z_physical_cash_out').on('*', async payload=>{
-                    await supabase.from('z_physical_cash_out').select('*').eq('zheader_id', zheader).then(({data})=>{
+                const z_physical_cash = supabase.from('z_physical_cash_in').on('*', async payload=>{
+                    await supabase.from('z_physical_cash_in').select('*').eq('zheader_id', zheader).then(({data})=>{
                         if(data) setRows(data);
                     });
                 }).subscribe()
@@ -96,7 +96,7 @@ const PhysicalCashOut = (props)=>{
 
             
             (async ()=>{
-                await supabase.from('cash_out_notes').select('*').eq('zheader_id', zheader).then(({data, error})=>{
+                await supabase.from('cash_in_notes').select('*').eq('zheader_id', zheader).then(({data, error})=>{
                     if(data) {
 
                         console.log('zheader: ', zheader)
@@ -107,8 +107,8 @@ const PhysicalCashOut = (props)=>{
                         console.log("Notes: ", error)
                     }
                 });
-                const cash_out_notes = supabase.from('cash_out_notes').on('*', async payload=>{
-                    await supabase.from('cash_out_notes').select('*').eq('zheader_id', zheader).then(({data})=>{
+                const cash_in_notes = supabase.from('cash_in_notes').on('*', async payload=>{
+                    await supabase.from('cash_in_notes').select('*').eq('zheader_id', zheader).then(({data})=>{
                         if(data) {
                             console.log('notes: ', data)
                             setNotes(data)
@@ -129,7 +129,7 @@ const PhysicalCashOut = (props)=>{
 
 
     return(
-    loading? <Skeleton variant="rectangular" height={400}/> :
+    loading? <Skeleton variant="rectangular" height={400}/>:
         <Box>
             {currencies?.map(currency=>{
                 const currencyRows = rows.filter(row=>row.cid === currency.id);
@@ -189,7 +189,7 @@ const PhysicalCashOut = (props)=>{
                     </Box>
                 )
             })}
-            
+        
         </Box>
     )
 }

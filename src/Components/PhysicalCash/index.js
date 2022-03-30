@@ -95,6 +95,7 @@ const PhysicalCash = (props)=>{
 
 
     return(
+    loading? <Skeleton variant="rectangular" height={400} />:
         <Box>
             {currencies?.map(currency=>{
                 const currencyRows = rows.filter(row=>row.cid === currency.id);
@@ -103,11 +104,10 @@ const PhysicalCash = (props)=>{
                     <Box sx={{padding: '10px 0'}}>
                         <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>
                             <Typography variant="h6" gutterBottom component="div">
-                                {`Physical Cash (${currency.code})`}
+                                {`(${currency.code})`}
                             </Typography>
                         </Box>
-                        {loading? <Skeleton variant="rectangular" height={400} />
-                        :<Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'center'}}>
+                        <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'center'}}>
                             <TableContainer component={Paper}>
                                 <Table size="small" sx={{ minWidth: 650 }} aria-label="simple table">
                                     <TableHead>
@@ -148,7 +148,7 @@ const PhysicalCash = (props)=>{
                                     </TableBody>
                                 </Table>
                             </TableContainer>
-                        </Box>}
+                        </Box>
                     </Box>
                 )
             })}

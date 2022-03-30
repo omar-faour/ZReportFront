@@ -164,10 +164,10 @@ import CurrencyFormatter from '../CurrencyFormatter'
           const z_details = supabase.from('z_details').on('*', async payload=>{
             await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
               if(data){
-                console.log("CHANGES")
+                console.log("CHANGES");
                 setRows(data);
-                setSavedChanges(true);
               }
+              setSavedChanges(true);
             });
           }).subscribe()
           
@@ -202,7 +202,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
                   <TableHead>
                     <TableRow hover className={classes.tableHeaders}>
                       <TableCell></TableCell>
-                      {sessions.map(session=>(<TableCell>{session.session_name}</TableCell>))}
+                      {sessions?.map(session=>(<TableCell>{session.session_name}</TableCell>))}
                       <TableCell>TOTAL</TableCell>
                     </TableRow>
                   </TableHead>
