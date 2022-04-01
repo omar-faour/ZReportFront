@@ -38,7 +38,8 @@ import {
   Switch,
   Route,
   Link,
-  useLocation
+  useLocation,
+  Redirect
 } from "react-router-dom";
 
 import {selectedDateState, zheaderIdState} from '../states'
@@ -231,16 +232,16 @@ const App = (props) => {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
-          {/* <Switch>
+          <Switch>
             <Route exact path="/">
               <HomeScreen />
             </Route>
-            <Route path="/ZReport/:id">
-              <ZReport />
+            <Route path="/ZReport">
+              {(!selectedDate && !zheaderId) ? <Redirect to="/" /> : <ZReport /> }
             </Route>
-          </Switch> */}
-        {(!selectedDate && !zheaderId) && <HomeScreen />}
-        {(selectedDate && zheaderId) && <ZReport />}
+          </Switch>
+        {/* {(!selectedDate && !zheaderId) && <HomeScreen />}
+        {(selectedDate && zheaderId) && <ZReport />} */}
       </Box>
     </Box>
   );

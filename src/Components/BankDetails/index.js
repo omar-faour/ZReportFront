@@ -16,6 +16,7 @@ import Skeleton from '@mui/material/Skeleton';
 
 import { makeStyles } from "@mui/styles";
 
+import {toBeSavedState} from '../../states'
 
 import CurrencyFormatter from '../CurrencyFormatter';
 
@@ -28,7 +29,7 @@ const useStyles=makeStyles({
 
 const BankDetails = (props)=>{
 
-    const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
+    const {store, selectedStore, sessions, zheader} = props;
 
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
@@ -37,11 +38,12 @@ const BankDetails = (props)=>{
     let bankSummations = [];
 
     const onChange = async (e, row, session, bank)=>{
-        setSavedChanges(false);
+        // setSavedChanges(false);
         const targetValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
         if(row){
-            const {data, error} = await supabase.from('z_bank_details').update({value: targetValue}).eq('id', row.id);
-            if(data) setSavedChanges(true);
+            toBeSavedState.update(s=>{s.bankDetails = [...s.bankDetails , {method: 'update', values: {value: targetValue}, id: row.id}]})
+            // const {data, error} = await supabase.from('z_bank_details').update({value: targetValue}).eq('id', row.id);
+            // if(data) setSavedChanges(true);
         }else if(!row){
             let newData = {
                 zheader_id: zheader,
@@ -49,10 +51,11 @@ const BankDetails = (props)=>{
                 value: targetValue,
                 session_id: session.session_id
             }
-            const {data, error} = await supabase.from('z_bank_details').insert(newData);
-            if(data) {
-                setSavedChanges(true);
-            }
+            toBeSavedState.update(s=>{s.bankDetails = [...s.bankDetails, {method: 'insert', values: newData}]})
+            // const {data, error} = await supabase.from('z_bank_details').insert(newData);
+            // if(data) {
+            //     setSavedChanges(true);
+            // }
         }
         
 
@@ -87,6 +90,7 @@ const BankDetails = (props)=>{
     useEffect(()=>{
         fetchData();
     }, [selectedStore])
+    
 
     return (
         <Box sx={{padding: '10px 0'}}>

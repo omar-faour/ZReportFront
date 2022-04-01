@@ -44,7 +44,7 @@ const CurrencyFormatter = (props)=>{
 
         <TextField
             disabled = {disabled}
-            value={value}
+            defaultValue={value}
             // onChange={onChange}
             onBlur={onChange}
             size="small"

@@ -4,6 +4,7 @@ import {useParams} from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import LoadingButton from '@mui/lab/LoadingButton';
 import Skeleton from '@mui/material/Skeleton';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
@@ -15,7 +16,10 @@ import {makeStyles} from '@mui/styles';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import Fab from '@mui/material/Fab';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SaveIcon from '@mui/icons-material/Save';
+
 
 
 import HeaderDetails from '../../Components/HeaderDetails';
@@ -29,7 +33,7 @@ import BankDetails from '../../Components/BankDetails';
 import PayByPhoneDetails from '../../Components/PayByPhoneDetails';
 import SummaryDetails from '../../Components/SummaryDetails';
 
-import {storeState, selectedStoreState, zheaderIdState, selectedDateState} from '../../states';
+import {storeState, selectedStoreState, zheaderIdState, selectedDateState, toBeSavedState} from '../../states';
 import {supabase} from "../../Configs/supabase"
 
 
@@ -50,17 +54,167 @@ const ZReport = (props)=>{
 
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState(null);
-  const [savedChanges, setSavedChanges] = useState(null);
+  const [changesCounter, setChangesCounter] = useState(0);
+  const [savingChanges, setSavingChanges] = useState(false);
   const [openSummary, setOpenSummary] = useState(false);
   const selectedStore = selectedStoreState.useState(s=>s);
   const zheader_id = zheaderIdState.useState(s=>s);
   const store = storeState.useState(s=>s);
   const selectedDate = selectedDateState.useState(s=>s)
+  const toBeSaved = toBeSavedState.useState(s=>s);
   const classes = useStyles();
+  
   const handleOpenSummary = ()=>{
     setOpenSummary(!openSummary);
   }
 
+ 
+
+  const saveChanges = async ()=>{
+    if(changesCounter > 0)
+      {
+        setSavingChanges(true)
+        Promise.allSettled([
+          // headerDetails: {},
+          Object.keys(toBeSaved.headerDetails).length > 0 && (async()=>{ 
+            await supabase.from('z_header').update(toBeSaved.headerDetails).eq('id', toBeSaved.headerDetails.id).then(({error})=>console.log(error)) 
+          })(),
+          
+          // bankDetails: [],
+          toBeSaved.bankDetails.length > 0 && (async()=>{
+            //INSERT: 
+              const insertRows =  toBeSaved.bankDetails.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('z_bank_details').insert(insertValues).then(({error})=>console.log(error));            
+            //UPDATE: 
+              const updateRows = toBeSaved.bankDetails.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('z_bank_details').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+          })(),
+          
+          // payByPhoneDetails: [],
+          toBeSaved.payByPhoneDetails.length > 0 && (async()=>{
+            //INSERT: 
+              const insertRows =  toBeSaved.payByPhoneDetails.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('z_pbp_details').insert(insertValues).then(({error})=>console.log(error));            
+            //UPDATE: 
+              const updateRows = toBeSaved.payByPhoneDetails.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('z_pbp_details').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+          })(),
+
+          // physicalCards: [],
+          toBeSaved.physicalCards.length > 0 && (async()=>{
+            //INSERT:
+              const insertRows =  toBeSaved.physicalCards.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('z_physical_cards').insert(insertValues).then(({error})=>console.log(error));            
+            //UPDATE:
+              const updateRows = toBeSaved.physicalCards.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('z_physical_cards').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+          })(),
+
+          // physicalCash: [],
+          toBeSaved.physicalCash.length > 0 && (async()=>{
+            //INSERT:
+              const insertRows =  toBeSaved.physicalCash.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('z_physical_cash').insert(insertValues).then(({error})=>console.log(error));            
+            //UPDATE:
+              const updateRows = toBeSaved.physicalCash.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('z_physical_cash').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+          })(),
+         
+          // physicalCashIn: [],
+          toBeSaved.physicalCashIn.length > 0 && (async()=>{
+            //INSERT: 
+              const insertRows =  toBeSaved.physicalCashIn.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('z_physical_cash_in').insert(insertValues).then(({error})=>console.log(error));            
+            //UPDATE: 
+              const updateRows = toBeSaved.physicalCashIn.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('z_physical_cash_in').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+          })(),
+
+          // physicalCashInNotes: [],
+          toBeSaved.physicalCashInNotes.length > 0 && (async()=>{
+            //INSERT: 
+              const insertRows =  toBeSaved.physicalCashInNotes.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('cash_in_notes').insert(insertValues).then(({error})=>console.log(error));            
+            //UPDATE: 
+              const updateRows = toBeSaved.physicalCashInNotes.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('cash_in_notes').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+          })(),
+
+          // physicalCashOut: [],
+          toBeSaved.physicalCashOut.length > 0 && (async()=>{
+            //INSERT: 
+              const insertRows =  toBeSaved.physicalCashOut.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('z_physical_cash_out').insert(insertValues).then(({error})=>console.log(error));           
+            //UPDATE: 
+              const updateRows = toBeSaved.physicalCashOut.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('z_physical_cash_out').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+          })(),
+
+          // physicalCashOutNotes: [],
+          toBeSaved.physicalCashOutNotes.length > 0 && (async()=>{
+            //INSERT: 
+              const insertRows =  toBeSaved.physicalCashOutNotes.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('cash_out_notes').insert(insertValues).then(({error})=>console.log(error));            
+            //UPDATE: 
+              const updateRows = toBeSaved.physicalCashOutNotes.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('cash_out_notes').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+          })(),
+
+          // physicalPayByPhone: [],
+          toBeSaved.physicalPayByPhone.length > 0 && (async()=>{
+            //INSERT: 
+              const insertRows =  toBeSaved.physicalPayByPhone.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('z_physical_pbp').insert(insertValues).then(({error})=>console.log(error));            
+            //UPDATE: 
+              const updateRows = toBeSaved.physicalPayByPhone.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('z_physical_pbp').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+          })(),
+          
+          // systemData: []
+          toBeSaved.systemData.length > 0 && (async()=>{
+            //INSERT: 
+              const insertRows = toBeSaved.systemData.filter(row=> {if(row.method === 'insert') return row.values});
+              const insertValues = [...insertRows.map(row=>({...row.values}))]
+              await supabase.from('z_details').insert(insertValues).then(({error})=>console.log(error));
+            //UPDATE: 
+              const updateRows = toBeSaved.systemData.filter(row=>row.method === 'update');
+              updateRows.map(async row=>{
+                return await supabase.from('z_details').update(row.values).eq('id', row.id).then(({error})=>console.log(error));
+              })
+              
+          })(),
+        ]).finally(()=>{
+          setSavingChanges(false)
+        })
+  }
+}
 
 
   useEffect(()=>{
@@ -89,6 +243,19 @@ const ZReport = (props)=>{
     
   },[selectedStore])
 
+  useEffect(()=>{
+    let value = Object.keys(toBeSaved.headerDetails).length + toBeSaved.bankDetails.length + toBeSaved.payByPhoneDetails.length + toBeSaved.physicalCards.length + toBeSaved.physicalCash.length + toBeSaved.physicalCashIn.length + toBeSaved.physicalCashInNotes.length + toBeSaved.physicalCashOut.length + toBeSaved.physicalCashOutNotes.length + toBeSaved.physicalPayByPhone.length + toBeSaved.systemData.length;
+    setChangesCounter(value);
+  }, [toBeSaved]);
+
+  useEffect(()=>{
+    const interval = setInterval(()=>{
+      saveChanges();
+    }, 10000);
+
+    return ()=>clearInterval(interval);
+  },[])
+
   return (
     <>
     <Box>
@@ -103,6 +270,16 @@ const ZReport = (props)=>{
             <Button onClick={handleOpenSummary}>
                 View Summary
             </Button>
+            <LoadingButton
+              onClick={saveChanges}
+              loading={savingChanges}
+              loadingPosition="start"
+              startIcon={<SaveIcon />}
+              variant="outlined"
+              disabled={!(changesCounter > 0)}
+            >
+              Save Changes
+            </LoadingButton>
           </Box> 
 
         </Box>
@@ -118,7 +295,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <SystemData store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id} setSavedChanges={setSavedChanges} />
+              <SystemData store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -131,7 +308,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalCards store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id} setSavedChanges={setSavedChanges} />
+              <PhysicalCards store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -144,7 +321,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalCash store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id} setSavedChanges={setSavedChanges} />
+              <PhysicalCash store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -157,7 +334,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalCashOut store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id} setSavedChanges={setSavedChanges} />
+              <PhysicalCashOut store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -170,7 +347,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalCashIn store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id} setSavedChanges={setSavedChanges} />
+              <PhysicalCashIn store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
           
@@ -183,7 +360,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalPayByPhone store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id} setSavedChanges={setSavedChanges} />
+              <PhysicalPayByPhone store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
           
@@ -196,7 +373,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <BankDetails store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id} setSavedChanges={setSavedChanges} />
+              <BankDetails store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -209,7 +386,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PayByPhoneDetails store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id} setSavedChanges={setSavedChanges} />
+              <PayByPhoneDetails store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
           
@@ -218,7 +395,7 @@ const ZReport = (props)=>{
       </>}
     </Box>
    
-    <Snackbar
+    {/* <Snackbar
       anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       open={savedChanges !== null}
       TransitionComponent={Grow}
@@ -226,7 +403,7 @@ const ZReport = (props)=>{
       onClose={()=>setSavedChanges(null)}
     >
       <Alert severity={savedChanges === true ? 'success' : 'info'}>{savedChanges === true ? 'Saved!' : 'Saving...!'}</Alert>
-    </Snackbar>
+    </Snackbar> */}
     </>
   );
 }

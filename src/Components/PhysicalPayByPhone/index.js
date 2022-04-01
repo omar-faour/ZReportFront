@@ -16,6 +16,8 @@ import { makeStyles } from "@mui/styles";
 
 import CurrencyFormatter from '../CurrencyFormatter';
 
+import {toBeSavedState} from '../../states';
+
 
 const useStyles=makeStyles({
     tableHeaders: {
@@ -26,7 +28,7 @@ const useStyles=makeStyles({
 
 const PhysicalPayByPhone = (props)=>{
 
-    const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
+    const {store, selectedStore, sessions, zheader} = props;
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
     const [rowHeaders, setRowHeaders] = useState([]); 
@@ -38,7 +40,7 @@ const PhysicalPayByPhone = (props)=>{
 
     const onChange = async (e, row, rowHeader, session)=>{
       const targetValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
-      setSavedChanges(false);
+      // setSavedChanges(false);
 
       if(row){ 
         const updatedDetails = {}
@@ -69,17 +71,19 @@ const PhysicalPayByPhone = (props)=>{
             }
         }
         
-          const{data, error} = await supabase.from('z_physical_pbp').update(updatedDetails).eq('id', row.id);
+        toBeSavedState.update(s=>{s.physicalPayByPhone = [...s.physicalPayByPhone , {method: 'update', values: updatedDetails, id: row.id}]})
 
-          if(data){
-            setRows(oldRows=>{
-              const filteredRows = oldRows.filter(oldRow=>oldRow.id !== row.id)
-              return [...filteredRows, {...row, ...updatedDetails}]
-          })
-          }
-          if(error){
-            console.log("Error: ", error);
-          }
+          // const{data, error} = await supabase.from('z_physical_pbp').update(updatedDetails).eq('id', row.id);
+
+          // if(data){
+          //   setRows(oldRows=>{
+          //     const filteredRows = oldRows.filter(oldRow=>oldRow.id !== row.id)
+          //     return [...filteredRows, {...row, ...updatedDetails}]
+          // })
+          // }
+          // if(error){
+          //   console.log("Error: ", error);
+          // }
 
       }else if(!row && targetValue && targetValue !== 0){
         let z_date = new Date().toISOString().split('T')[0]
@@ -114,9 +118,11 @@ const PhysicalPayByPhone = (props)=>{
           newData['amount_2'] = parseFloat(targetValue)/parseFloat(rate_1_value[0].rate)*parseFloat(rate_2_value[0].rate);
         }
 
-        const {data, error} = await supabase.from('z_physical_pbp').insert(newData)
+        toBeSavedState.update(s=>{s.physicalPayByPhone = [...s.physicalPayByPhone, {method: 'insert', values: newData}]})
 
-        if(error) console.log('insert error: ', error)
+        // const {data, error} = await supabase.from('z_physical_pbp').insert(newData)
+
+        // if(error) console.log('insert error: ', error)
       }
       
       
@@ -158,14 +164,14 @@ const PhysicalPayByPhone = (props)=>{
               }
             
 
-            await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
+            await supabase.from('z_physical_pbp').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
               if(data) setRows(data)
             });
             const z_physical_pbp = supabase.from('z_physical_pbp').on('*', async payload=>{
               const {data, error} = await supabase.from('z_physical_pbp').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader);
               if(data){
                 setRows(data);
-                setSavedChanges(true)
+                // setSavedChanges(true)
               }
             }).subscribe()
           

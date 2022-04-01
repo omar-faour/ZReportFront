@@ -16,6 +16,8 @@ import { makeStyles } from "@mui/styles";
 
 import CurrencyFormatter from '../CurrencyFormatter'
 
+import { toBeSavedState } from "../../states";
+
   
   const useStyles=makeStyles({
     tableHeaders: {
@@ -25,7 +27,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
 
 
   const SystemData = (props) => {
-    const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
+    const {store, selectedStore, sessions, zheader} = props;
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
     const [rowHeaders, setRowHeaders] = useState([]); 
@@ -33,13 +35,14 @@ import CurrencyFormatter from '../CurrencyFormatter'
     const [rows, setRows] = useState([]); 
     const [currencies, setCurrencies] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
+    const toBeSaved = toBeSavedState.useState(s=>s.systemData)
 
     let values = {fields: [], totals: []};
 
 
     const onChange = async (e, row, rowHeader, session)=>{
       const targetValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
-      setSavedChanges(false);
+      // setSavedChanges(false);
 
       if(row){ 
         const updatedDetails = {}
@@ -69,18 +72,19 @@ import CurrencyFormatter from '../CurrencyFormatter'
                 updatedDetails['amount_2'] = amount_2;
             }
         }
-        
-          const{data, error} = await supabase.from('z_details').update(updatedDetails).eq('id', row.id);
+        toBeSavedState.update(s=>{s.systemData = [...s.systemData , {method: 'update', values: updatedDetails, id: row.id}]})
 
-          if(data){
-          setRows(oldRows=>{
-              const filteredRows = oldRows.filter(oldRow=>oldRow.id !== row.id)
-              return [...filteredRows, {...row, ...updatedDetails}]
-          })
-          }
-          if(error){
-            console.log("Error: ", error);
-          }
+          // const{data, error} = await supabase.from('z_details').update(updatedDetails).eq('id', row.id);
+
+          // if(data){
+          // setRows(oldRows=>{
+          //     const filteredRows = oldRows.filter(oldRow=>oldRow.id !== row.id)
+          //     return [...filteredRows, {...row, ...updatedDetails}]
+          // })
+          // }
+          // if(error){
+          //   console.log("Error: ", error);
+          // }
 
       }else if(!row && targetValue && targetValue !== 0){
         let z_date = new Date().toISOString().split('T')[0]
@@ -115,9 +119,11 @@ import CurrencyFormatter from '../CurrencyFormatter'
           newData['amount_2'] = parseFloat(targetValue)*parseFloat(rate_1_value[0].rate)*parseFloat(rate_2_value[0].rate);
         }
 
-        const {data, error} = await supabase.from('z_details').insert(newData)
+        toBeSavedState.update(s=>{s.systemData = [...s.systemData, {method: 'insert', values: newData}]})
 
-        if(error) {console.log('insert error: ', error)}
+        // const {data, error} = await supabase.from('z_details').insert(newData)
+
+        // if(error) {console.log('insert error: ', error)}
       }
       
       
@@ -167,7 +173,7 @@ import CurrencyFormatter from '../CurrencyFormatter'
                 console.log("CHANGES");
                 setRows(data);
               }
-              setSavedChanges(true);
+              // setSavedChanges(true);
             });
           }).subscribe()
           
@@ -184,7 +190,9 @@ import CurrencyFormatter from '../CurrencyFormatter'
       fetchData()
     },[selectedStore])
 
-
+    useEffect(()=>{
+      console.log(toBeSaved)
+    }, [toBeSaved])
 
 
     return (

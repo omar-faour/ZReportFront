@@ -16,6 +16,7 @@ import Skeleton from '@mui/material/Skeleton';
 import { supabase } from '../../Configs/supabase';
 import CurrencyFormatter from '../CurrencyFormatter';
 
+import {toBeSavedState} from '../../states';
 
 const DatePicker = ({value, onChange})=>{
     return (
@@ -73,16 +74,18 @@ const HeaderDetails = (props)=>{
             targetValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
         }
         console.log(`${key}: ${targetValue}`)
-        await supabase.from('z_header').update({[key]: targetValue}).eq('id', zheader).then(({data, error})=>{
-            if(error){
-                console.log('error: ', error)
-            }
-        });
+        toBeSavedState.update(s=>{s.headerDetails = {...s.headerDetails, [key]: targetValue, id: zheader}})
+        // await supabase.from('z_header').update({[key]: targetValue}).eq('id', zheader).then(({data, error})=>{
+        //     if(error){
+        //         console.log('error: ', error)
+        //     }
+        // });
     }
 
     useEffect(()=>{
         fetchData();
     }, [selectedStore]);
+
 
     return (
     <>

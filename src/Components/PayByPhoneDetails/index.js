@@ -17,6 +17,8 @@ import { makeStyles } from "@mui/styles";
 
 import CurrencyFormatter from '../CurrencyFormatter';
 
+import {toBeSavedState} from '../../states';
+
 
 const useStyles=makeStyles({
     tableHeaders: {
@@ -26,7 +28,7 @@ const useStyles=makeStyles({
 
 const PayByPhoneDetails = (props)=>{
 
-    const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
+    const {selectedStore, sessions, zheader} = props;
 
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
@@ -35,13 +37,14 @@ const PayByPhoneDetails = (props)=>{
     let bankSummations = [];
 
     const onChange = async (e, row, session, bank)=>{
-        setSavedChanges(false);
+        // setSavedChanges(false);
         const targetValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
         if(row){
-            const {data, error} = await supabase.from('z_pbp_details').update({value: targetValue}).eq('id', row.id);
-            if(data) {
-                setSavedChanges(true);
-            }
+            toBeSavedState.update(s=>{s.payByPhoneDetails = [...s.payByPhoneDetails , {method: 'update', values: {value: targetValue}, id: row.id}]})
+            // const {data, error} = await supabase.from('z_pbp_details').update({value: targetValue}).eq('id', row.id);
+            // if(data) {
+            //     setSavedChanges(true);
+            // }
         }else if(!row){
             let newData = {
                 zheader_id: zheader,
@@ -49,14 +52,12 @@ const PayByPhoneDetails = (props)=>{
                 value: targetValue,
                 session_id: session.session_id
             }
-            const {data, error} = await supabase.from('z_pbp_details').insert(newData);
-            if(data) {
-                setSavedChanges(true);
-            }
+            toBeSavedState.update(s=>{s.payByPhoneDetails = [...s.payByPhoneDetails, {method: 'insert', values: newData}]})
+            // const {data, error} = await supabase.from('z_pbp_details').insert(newData);
+            // if(data) {
+            //     setSavedChanges(true);
+            // }
         }
-        
-
-        
     }
 
     const fetchData = async ()=>{
@@ -86,7 +87,7 @@ const PayByPhoneDetails = (props)=>{
     useEffect(()=>{
         fetchData();
     }, [selectedStore])
-
+    
     return (
         <Box sx={{padding: '10px 0'}}>
             <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>

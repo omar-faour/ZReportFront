@@ -16,6 +16,8 @@ import TextField from '@mui/material/TextField';
 import { makeStyles } from "@mui/styles";
 
 import CurrencyFormatter from '../CurrencyFormatter';
+import { toBeSavedState } from '../../states';
+
 
 
 const useStyles=makeStyles({
@@ -26,7 +28,7 @@ const useStyles=makeStyles({
 
 
 const PhysicalCashOut = (props)=>{
-    const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
+    const {store, selectedStore, sessions, zheader} = props;
     const classes = useStyles();
 
     const [loading, setLoading] = useState(true);
@@ -35,20 +37,24 @@ const PhysicalCashOut = (props)=>{
     const [notes, setNotes] = useState([]);
 
 
-    const onNoteChange = async (e, domination, id = null)=>{
+    const onNoteChange = async (e, domination, id = null, cid)=>{
         if(!id){
-            await supabase.from('cash_out_notes').insert({domination: domination, note: e.target.value, zheader_id: zheader})
+            toBeSavedState.update(s=>{s.physicalCashOutNotes = [...s.physicalCashOutNotes, {method: 'insert', values:{domination: domination, note: e.target.value, zheader_id: zheader, cid: cid}}]})
+
+            // await supabase.from('cash_out_notes').insert({domination: domination, note: e.target.value, zheader_id: zheader})
         }else if(id){
-            await supabase.from('cash_out_notes').update({note: e.target.value}).eq('id', id);
+            toBeSavedState.update(s=>{s.physicalCashOutNotes = [...s.physicalCashOutNotes, {method: 'update', values:{note: e.target.value}, id: id}]})
+            // await supabase.from('cash_out_notes').update({note: e.target.value}).eq('id', id);
         }
     }
 
     const onChange = async (e, row, domination, session, currency)=>{
-        setSavedChanges(false);
+        // setSavedChanges(false);
         const targetValue = parseInt(e.target.value.replace(/[^0-9.]/g, '')) || 0
         if(row){
-            const {data, error} = await supabase.from('z_physical_cash_out').update({count: targetValue}).eq('id', row.id);
-            if(data) setSavedChanges(true)
+            toBeSavedState.update(s=>{s.physicalCashOut = [...s.physicalCashOut , {method: 'update', values: {count: e.target.value}, id: row.id}]})
+            // const {data, error} = await supabase.from('z_physical_cash_out').update({count: targetValue}).eq('id', row.id);
+            // if(data) setSavedChanges(true)
         }else if(!row && targetValue && targetValue!==0){
             const z_date = new Date().toISOString().split('T')[0]
             let newData = {
@@ -61,13 +67,15 @@ const PhysicalCashOut = (props)=>{
                 rate: await (await supabase.from('exchanges').select('*').eq('currency', currency.id).lte('date', z_date).order('date', {ascending:false}).limit(1)).data[0].id,
                 z_date: z_date
             }
-            const {data, error} = await supabase.from('z_physical_cash_out').insert(newData);
-            if(data){
-                setSavedChanges(true)
-            }
-            if(error){
-                console.log("ERROR: ", error);
-            }
+            toBeSavedState.update(s=>{s.physicalCashOut = [...s.physicalCashOut, {method: 'insert', values: newData}]})
+
+            // const {data, error} = await supabase.from('z_physical_cash_out').insert(newData);
+            // if(data){
+            //     setSavedChanges(true)
+            // }
+            // if(error){
+            //     console.log("ERROR: ", error);
+            // }
         }
     }
 
@@ -171,7 +179,7 @@ const PhysicalCashOut = (props)=>{
                                                     </TableCell>
                                                 })}
                                                 <TableCell className={classes.tableHeaders}><CurrencyFormatter value={dominationSum*domination} currency={currency.code} disabled/></TableCell>
-                                                <TableCell><TextField onBlur={(e)=>onNoteChange(e, domination, note?.id || null)} variant='standard' defaultValue={note?.note} InputProps={{disableUnderline: true}}/></TableCell>
+                                                <TableCell><TextField onBlur={(e)=>onNoteChange(e, domination, note?.id || null, currency.id)} variant='standard' defaultValue={note?.note} InputProps={{disableUnderline: true}}/></TableCell>
                                             </TableRow>
                                         })}
 

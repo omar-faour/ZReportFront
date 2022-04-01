@@ -21,6 +21,7 @@ import Skeleton from '@mui/material/Skeleton';
 import CircularProgress from '@mui/material/CircularProgress';
 import {makeStyles} from '@mui/styles';
 
+import {useHistory} from 'react-router-dom';
 
 import {format} from 'date-fns';
 
@@ -40,6 +41,7 @@ const useStyles = makeStyles({
 const AccordionList = ({list = []})=>{
   
     const [expanded, setExpanded] = useState(null);
+    let history = useHistory();
 
     const handleExpand = (key)=>{
         setExpanded(expanded === key ? null : key)
@@ -48,6 +50,7 @@ const AccordionList = ({list = []})=>{
     const setHeader = (headerId, headerDate) => {
         zheaderIdState.update(s=>s=headerId);
         selectedDateState.update(s=>s=headerDate)
+        history.push('/ZReport')
     }
 
     return (

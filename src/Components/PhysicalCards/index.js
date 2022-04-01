@@ -16,6 +16,8 @@ import { makeStyles } from "@mui/styles";
 
 import CurrencyFormatter from '../CurrencyFormatter';
 
+import { toBeSavedState } from '../../states';
+
 
 const useStyles=makeStyles({
     tableHeaders: {
@@ -26,19 +28,18 @@ const useStyles=makeStyles({
 
 const PhysicalCards = (props)=>{
 
-    const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
+    const {store, selectedStore, sessions, zheader} = props;
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
     const [rowHeaders, setRowHeaders] = useState([]); 
     const [totalRowHeaders, setTotalRowHeaders] = useState([]); 
     const [rows, setRows] = useState([]); 
-
     let values = {fields: [], totals: []};
 
 
     const onChange = async (e, row, rowHeader, session)=>{
       const targetValue = parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0;
-      setSavedChanges(false);
+      // setSavedChanges(false);
 
       if(row){ 
         const updatedDetails = {}
@@ -67,19 +68,21 @@ const PhysicalCards = (props)=>{
                 updatedDetails['amount_1'] = amount_1;
                 updatedDetails['amount_2'] = amount_2;
             }
-        }
+        } 
         
-          const{data, error} = await supabase.from('z_physical_cards').update(updatedDetails).eq('id', row.id);
+        toBeSavedState.update(s=>{s.physicalCards = [...s.physicalCards , {method: 'update', values: updatedDetails, id: row.id}]})
+        
+          // const{data, error} = await supabase.from('z_physical_cards').update(updatedDetails).eq('id', row.id);
 
-          if(data){
-            setRows(oldRows=>{
-              const filteredRows = oldRows.filter(oldRow=>oldRow.id !== row.id)
-              return [...filteredRows, {...row, ...updatedDetails}]
-          })
-          }
-          if(error){
-            console.log("Error: ", error);
-          }
+          // if(data){
+          //   setRows(oldRows=>{
+          //     const filteredRows = oldRows.filter(oldRow=>oldRow.id !== row.id)
+          //     return [...filteredRows, {...row, ...updatedDetails}]
+          // })
+          // }
+          // if(error){
+          //   console.log("Error: ", error);
+          // }
 
       }else if(!row && targetValue && targetValue !== 0){
         let z_date = new Date().toISOString().split('T')[0]
@@ -114,9 +117,11 @@ const PhysicalCards = (props)=>{
           newData['amount_2'] = parseFloat(targetValue)/parseFloat(rate_1_value[0].rate)*parseFloat(rate_2_value[0].rate);
         }
 
-        const {data, error} = await supabase.from('z_physical_cards').insert(newData)
+        toBeSavedState.update(s=>{s.physicalCards = [...s.physicalCards, {method: 'insert', values: newData}]})
+
+        // const {data, error} = await supabase.from('z_physical_cards').insert(newData)
         
-        if(error) console.log('insert error: ', error)
+        // if(error) console.log('insert error: ', error)
       }
       
       
@@ -165,7 +170,7 @@ const PhysicalCards = (props)=>{
               const {data, error} = await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader);
               if(data){
                 setRows(data);
-                setSavedChanges(true)
+                // setSavedChanges(true)
               }
             }).subscribe()
           
@@ -180,6 +185,7 @@ const PhysicalCards = (props)=>{
     useEffect(()=>{
       fetchData()
     },[selectedStore])
+ 
 
     return (
       <Box sx={{padding: '10px 0'}}>

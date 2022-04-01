@@ -16,6 +16,8 @@ import { makeStyles } from "@mui/styles";
 
 import CurrencyFormatter from '../CurrencyFormatter';
 
+import {toBeSavedState} from '../../states';
+
 
 const useStyles=makeStyles({
     tableHeaders: {
@@ -25,18 +27,20 @@ const useStyles=makeStyles({
 
 
 const PhysicalCash = (props)=>{
-    const {store, selectedStore, sessions, setSavedChanges, zheader} = props;
+    const {store, selectedStore, sessions, zheader} = props;
     const classes = useStyles();
 
     const [loading, setLoading] = useState(true);
     const [currencies, setCurrencies] = useState([]);
     const [rows, setRows] = useState([]);
+    const toBeSaved = toBeSavedState.useState(s=>s.physicalCash);
 
     const onChange = async (e, row, domination, session, currency)=>{
-        setSavedChanges(false);
+        // setSavedChanges(false);
         if(row){
-            const {data, error} = await supabase.from('z_physical_cash').update({count: e.target.value}).eq('id', row.id);
-            if(data) setSavedChanges(true)
+            toBeSavedState.update(s=>{s.physicalCash = [...s.physicalCash , {method: 'update', values: {count: e.target.value}, id: row.id}]})
+            // const {data, error} = await supabase.from('z_physical_cash').update({count: e.target.value}).eq('id', row.id);
+            // if(data) setSavedChanges(true)
         }else if(!row){
             const z_date = new Date().toISOString().split('T')[0]
             let newData = {
@@ -49,13 +53,15 @@ const PhysicalCash = (props)=>{
                 rate: await (await supabase.from('exchanges').select('*').eq('currency', currency.id).lte('date', z_date).order('date', {ascending:false}).limit(1)).data[0].id,
                 z_date: z_date
             }
-            const {data, error} = await supabase.from('z_physical_cash').insert(newData);
-            if(data){
-                setSavedChanges(true)
-            }
-            if(error){
-                console.log("ERROR: ", error);
-            }
+            toBeSavedState.update(s=>{s.physicalCash = [...s.physicalCash, {method: 'insert', values: newData}]})
+
+            // const {data, error} = await supabase.from('z_physical_cash').insert(newData);
+            // if(data){
+            //     setSavedChanges(true)
+            // }
+            // if(error){
+            //     console.log("ERROR: ", error);
+            // }
         }
     }
 
@@ -92,6 +98,10 @@ const PhysicalCash = (props)=>{
     useEffect(()=>{
         fetchData()
     },[selectedStore])
+   
+    useEffect(()=>{
+        console.log(toBeSaved)
+    },[toBeSaved])
 
 
     return(
