@@ -33,7 +33,6 @@ const PhysicalCash = (props)=>{
     const [loading, setLoading] = useState(true);
     const [currencies, setCurrencies] = useState([]);
     const [rows, setRows] = useState([]);
-    const toBeSaved = toBeSavedState.useState(s=>s.physicalCash);
 
     const onChange = async (e, row, domination, session, currency)=>{
         // setSavedChanges(false);
@@ -77,11 +76,11 @@ const PhysicalCash = (props)=>{
                 }
             })(),
 
-            (async ()=>{
+            zheader && (async ()=>{
                 await supabase.from('z_physical_cash').select('*').eq('zheader_id', zheader).then(({data})=>{
                     if(data) setRows(data);
                 });
-                const z_physical_cash = supabase.from('z_physical_cash').on('*', async payload=>{
+                supabase.from('z_physical_cash').on('*', async payload=>{
                     await supabase.from('z_physical_cash').select('*').eq('zheader_id', zheader).then(({data})=>{
                         if(data) setRows(data);
                     });
@@ -95,14 +94,8 @@ const PhysicalCash = (props)=>{
     }
 
 
-    useEffect(()=>{
-        fetchData()
-    },[selectedStore])
+    useEffect(fetchData,[selectedStore])
    
-    useEffect(()=>{
-        console.log(toBeSaved)
-    },[toBeSaved])
-
 
     return(
     loading? <Skeleton variant="rectangular" height={400} />:
@@ -111,7 +104,7 @@ const PhysicalCash = (props)=>{
                 const currencyRows = rows.filter(row=>row.cid === currency.id);
                 let sessionSummations = [];
                 return (
-                    <Box sx={{padding: '10px 0'}}>
+                    <Box sx={{padding: '10px 0'}} key={currency.code}>
                         <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>
                             <Typography variant="h6" gutterBottom component="div">
                                 {`(${currency.code})`}
@@ -125,22 +118,22 @@ const PhysicalCash = (props)=>{
                                             <TableCell></TableCell>
                                             {sessions?.map((session, index)=>{
                                                 sessionSummations[index] = 0;
-                                                return <TableCell>{session.session_name}</TableCell>
+                                                return <TableCell key={`session-name-${index}`}>{session.session_name}</TableCell>
                                             })}
                                             <TableCell>TOTAL</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {currency.dominations.map(domination=>{
+                                        {currency.dominations.map((domination, index)=>{
                                             const dominationRows = currencyRows.filter(row=>row.domination === domination);
                                             let dominationSum = 0;
-                                            return <TableRow>
+                                            return <TableRow key={`domination-${index}`}>
                                                         <TableCell width={200}>{domination}</TableCell>
                                                         {sessions.map((session, index)=>{
                                                             const row = dominationRows.find(row=>row.session_id === session.session_id)
                                                             sessionSummations[index] += row?.count*domination || 0;
                                                             dominationSum += row?.count || 0;
-                                                            return <TableCell>
+                                                            return <TableCell key={`session-count-${index}`}>
                                                                     <CurrencyFormatter onChange={(e)=>onChange(e, row, domination, session, currency)} row={row} value={row?.count || 0} isCurrency={false}/>
                                                             </TableCell>
                                                         })}
@@ -151,7 +144,7 @@ const PhysicalCash = (props)=>{
                                         <TableRow>
                                             <TableCell>Total ({currency.code})</TableCell>
                                             {sessions.map((session, index)=>{
-                                                return <TableCell className={classes.tableHeaders}><CurrencyFormatter value={sessionSummations[index]} currency={currency.code} disabled/></TableCell>
+                                                return <TableCell className={classes.tableHeaders} key={`session-total-${index}`}><CurrencyFormatter value={sessionSummations[index]} currency={currency.code} disabled/></TableCell>
                                             })}
                                             <TableCell className={classes.tableHeaders}><CurrencyFormatter value={sessionSummations.reduce((partialSum, a) => partialSum + a, 0)} currency={currency.code} disabled/></TableCell>
                                         </TableRow>

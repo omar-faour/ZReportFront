@@ -68,30 +68,30 @@ const SelectStore = (props)=>{
     }
 
 
-    useEffect(()=>{
-        (async ()=>{
-            const user_access_level = (await supabase.from('user_access').select('*').eq('user_id', user.id)).data
-           
+    const checkUserLevels = async ()=>{
+        const user_access_level = (await supabase.from('user_access').select('*').eq('user_id', user.id)).data
+       
 
-            if(user_access_level){
-                const countries = (await supabase.from('countries').select('*').in('id', user_access_level[0].countries)).data
-                const cities = (await supabase.from('cities').select('*').in('id', user_access_level[0].cities)).data
-                const stores = (await supabase.from('stores').select('*').in('id', user_access_level[0].stores)).data
-                setLevels({countries, cities, stores});
-                if(countries.length === 1 && cities.length === 1 && stores.length === 1){
-                    // setSelectedLevels({country: countries[0], city: cities[0], store: stores[0]});
-                    storeState.update(s=>s={country: countries[0].id, city: cities[0].id, store: stores[0].id});
-                    // history.push('/ZReport')
-                    history.push('/')
-                }else{
+        if(user_access_level){
+            const countries = (await supabase.from('countries').select('*').in('id', user_access_level[0].countries)).data
+            const cities = (await supabase.from('cities').select('*').in('id', user_access_level[0].cities)).data
+            const stores = (await supabase.from('stores').select('*').in('id', user_access_level[0].stores)).data
+            setLevels({countries, cities, stores});
+            if(countries.length === 1 && cities.length === 1 && stores.length === 1){
+                // setSelectedLevels({country: countries[0], city: cities[0], store: stores[0]});
+                storeState.update(s=>s={country: countries[0].id, city: cities[0].id, store: stores[0].id});
+                // history.push('/ZReport')
+                history.push('/')
+            }else{
 
-                    setSelectedLevels({country: countries[0].id, city: cities[0].id, store: stores[0].id});
-                }
-
-                setLoading(false);
+                setSelectedLevels({country: countries[0].id, city: cities[0].id, store: stores[0].id});
             }
-        })();
-    },[])
+
+            setLoading(false);
+        }
+    }
+
+    useEffect(checkUserLevels,[])
 
     
     return (

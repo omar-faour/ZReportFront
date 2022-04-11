@@ -10,7 +10,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
 import { makeStyles } from "@mui/styles";
 
@@ -68,12 +67,12 @@ const PayByPhoneDetails = (props)=>{
                     if(data) setPayByPhoneBanks(data);
                 });
 
-                await supabase.from('z_pbp_details').select('*').then(({data})=>{
+                zheader && await supabase.from('z_pbp_details').select('*').eq('zheader_id', zheader).then(({data})=>{
                     if(data) setRows(data);
                 });
 
-                const z_pbp_details = supabase.from('z_pbp_details').on('*', async payload=>{
-                    await supabase.from('z_pbp_details').select('*').then(({data})=>{
+                zheader && supabase.from('z_pbp_details').on('*', async payload=>{
+                    await supabase.from('z_pbp_details').select('*').eq('zheader_id', zheader).then(({data})=>{
                         if(data) setRows(data);
                     });    
                 }).subscribe()
@@ -84,17 +83,10 @@ const PayByPhoneDetails = (props)=>{
         })
     }
 
-    useEffect(()=>{
-        fetchData();
-    }, [selectedStore])
+    useEffect(fetchData, [selectedStore])
     
     return (
         <Box sx={{padding: '10px 0'}}>
-            <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>
-                <Typography variant="h6" gutterBottom component="div">
-                    Pay-By-Phone Details
-                </Typography>
-            </Box>
             {loading? <Skeleton variant="rectangular" height={400} />
             :<Box>
                 <TableContainer component={Paper}>
@@ -104,22 +96,22 @@ const PayByPhoneDetails = (props)=>{
                                 <TableCell width={200}></TableCell>
                                 {payByPhoneBanks?.map((bank,index)=>{
                                     bankSummations[index] = 0;
-                                    return <TableCell>{bank.description}</TableCell>
+                                    return <TableCell key={`banks-name-${index}`}>{bank.description}</TableCell>
                                 })}
                                 <TableCell><b>TOTAL</b></TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {sessions?.map((session)=>{
+                            {sessions?.map((session, index)=>{
                                 const sessionRows = rows.filter(row=>row.session_id === session.session_id)
                                 let sessionSum = 0;
-                                return <TableRow>
+                                return <TableRow key={`session-sums-${index}`}>
                                     <TableCell width={200}>{session.session_name}</TableCell>
                                     {payByPhoneBanks?.map((bank,index)=>{
                                         const row = sessionRows.find(row=>row.pay_by_phone_id === bank.id)
                                         bankSummations[index] += row?.value || 0
                                         sessionSum += row?.value || 0
-                                        return <TableCell><CurrencyFormatter onChange={(e)=>onChange(e, row, session, bank)} value={row?.value || 0}/></TableCell>
+                                        return <TableCell key={`bank-total-${index}`}><CurrencyFormatter onChange={(e)=>onChange(e, row, session, bank)} value={row?.value || 0}/></TableCell>
                                     })}
                                     <TableCell className={classes.tableHeaders}><CurrencyFormatter value={sessionSum} disabled/></TableCell>
                                 </TableRow>
@@ -128,7 +120,7 @@ const PayByPhoneDetails = (props)=>{
                             <TableRow>
                                 <TableCell><b>Total</b></TableCell>
                                 {payByPhoneBanks.map((bank,index)=>{
-                                    return <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations[index]} disabled/></TableCell>
+                                    return <TableCell className={classes.tableHeaders} key={`total-bank-${index}`}><CurrencyFormatter value={bankSummations[index]} disabled/></TableCell>
                                 })}
                                 <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations.reduce((partialSum, a) => partialSum + a, 0)} disabled/></TableCell>
                             </TableRow>

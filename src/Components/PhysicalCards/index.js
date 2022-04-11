@@ -9,7 +9,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
 
 import { makeStyles } from "@mui/styles";
@@ -47,22 +46,21 @@ const PhysicalCards = (props)=>{
         let amount_2;
 
         if(rowHeader.currency.id === 1){
-            const {data: rate_value, error} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
+            const {data: rate_value, } = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
             updatedDetails['amount_f'] = parseFloat(targetValue)
             updatedDetails['amount_1'] = parseFloat(targetValue)
             updatedDetails['amount_2'] = parseFloat(targetValue) * parseFloat(rate_value[0].rate);
         }else if(rowHeader.currency.id === 2){
-            const {data: rate_value, error} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
+            const {data: rate_value, } = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
             updatedDetails['amount_f'] = parseFloat(targetValue)
             updatedDetails['amount_2'] = parseFloat(targetValue)
             updatedDetails['amount_1'] = parseFloat(targetValue)/parseFloat(rate_value[0].rate);
         }else if(rowHeader.currency.id !== 1 && rowHeader.currency.id !== 1){
-            const {data: rate_1_value, error} = await supabase.from('exchanges').select('*').eq('currency', rowHeader.currency.id).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
+            const {data: rate_1_value, } = await supabase.from('exchanges').select('*').eq('currency', rowHeader.currency.id).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
             amount_1 = parseFloat(targetValue)*rate_1_value;
-            const {data: rate_2_value, error: rate_2_Error} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
+            const {data: rate_2_value,} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
             if(rate_2_value){
-                const rate_2_value = rate_2_value[0].rate;
-                amount_2 = amount_1 * rate_2_value;
+                amount_2 = amount_1 * rate_2_value[0].rate;
 
                 updatedDetails['amount_f'] = parseFloat(targetValue);
                 updatedDetails['amount_1'] = amount_1;
@@ -102,7 +100,6 @@ const PhysicalCards = (props)=>{
           newData['amount_1'] = parseFloat(targetValue);
           newData['amount_2'] = parseFloat(targetValue)*parseFloat(rate_2_value[0].rate);
         }else if(rowHeader.currency.id === 2){
-          const {data: rate_1_value} = await supabase.from('exchanges').select('*').eq('currency', 1).lte('date', z_date).order('date', {ascending:false}).limit(1);
           const {data: rate_2_value} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', z_date).order('date', {ascending:false}).limit(1);
           newData['rate'] = parseFloat(rate_2_value[0].id);
           newData['amount_f'] = parseFloat(targetValue);
@@ -135,9 +132,9 @@ const PhysicalCards = (props)=>{
         (async ()=>{
 
 
-          const {data: paymentsData, error: paymentsError} = await supabase.from('payment_types').select('*, type_of(*)').eq('type_of', 2)
+          const {data: paymentsData,} = await supabase.from('payment_types').select('*, type_of(*)').eq('type_of', 2)
             if(paymentsData){
-              const {data: currencyData, error: currencyError} = await supabase.from('currencies').select('*').in('id', (await supabase.from('countries').select('*').eq('id', store.country)).data[0].currencies)
+              const {data: currencyData, } = await supabase.from('currencies').select('*').in('id', (await supabase.from('countries').select('*').eq('id', store.country)).data[0].currencies)
               if(currencyData){
                 let array = [];
                 paymentsData.map(payment=>{
@@ -163,11 +160,11 @@ const PhysicalCards = (props)=>{
               }
             
 
-            await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
+            zheader && await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
               if(data) setRows(data)
             });
-            const z_physical_cards = supabase.from('z_physical_cards').on('*', async payload=>{
-              const {data, error} = await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader);
+            supabase.from('z_phySsical_cards').on('*', async payload=>{
+              const {data} = await supabase.from('z_physical_cards').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader);
               if(data){
                 setRows(data);
                 // setSavedChanges(true)
@@ -182,18 +179,11 @@ const PhysicalCards = (props)=>{
     }
 
    
-    useEffect(()=>{
-      fetchData()
-    },[selectedStore])
+    useEffect(fetchData,[selectedStore])
  
 
     return (
       <Box sx={{padding: '10px 0'}}>
-        <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-around'}}>
-            <Typography variant="h6" gutterBottom component="div">
-                Physical cards
-            </Typography>
-        </Box>
         {
           loading ? 
         //   <Box sx={{position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)'}}>
@@ -207,7 +197,7 @@ const PhysicalCards = (props)=>{
                   <TableHead>
                     <TableRow hover className={classes.tableHeaders}>
                       <TableCell></TableCell>
-                      {sessions.map(session=>(<TableCell>{session.session_name}</TableCell>))}
+                      {sessions.map((session, index)=>(<TableCell key={`session-name-${index}`}>{session.session_name}</TableCell>))}
                       <TableCell>TOTAL</TableCell>
                     </TableRow>
                   </TableHead>
@@ -215,17 +205,17 @@ const PhysicalCards = (props)=>{
                     {rowHeaders.map((rowHeader, index)=>{
                       let rowValues = [];
                       return (
-                      <TableRow hover>
+                      <TableRow hover key={`header-${index}`}>
                         <TableCell width={200}>
                           {rowHeader?.payment?.type} ({rowHeader?.currency?.code})
                         </TableCell>
                         
-                          {sessions.map(session=>{
+                          {sessions.map((session, index)=>{
                             
                             const row = rows.find(row=>row.ptid.id === rowHeader.payment.id && row.cid === rowHeader.currency.id && row.session_id === session.session_id)
                             rowValues.push(row?.amount_f ??  0)
                               return (
-                                <TableCell>
+                                <TableCell key={`session-${index}`}>
                                   <CurrencyFormatter onChange={(e)=>onChange(e, row, rowHeader, session)} row={row} value={row?.amount_f ?? 0} currency={rowHeader?.currency?.code ?? 'USD'}/>
                                 </TableCell>
                               )
@@ -244,10 +234,10 @@ const PhysicalCards = (props)=>{
                       )
                     })}
 
-                    {totalRowHeaders.map(totalRow=>{
+                    {totalRowHeaders.map((totalRow, index)=>{
                       let rowValues =[];
                      return (
-                       <TableRow hover>
+                       <TableRow hover key={`total-header-${index}`}>
                          <TableCell>
                            <b>{totalRow.payment.type} (Total)</b>
                          </TableCell>
@@ -260,7 +250,7 @@ const PhysicalCards = (props)=>{
                             })
                             rowValues.push(sum);
                             return(
-                              <TableCell className={classes.tableHeaders}>
+                              <TableCell className={classes.tableHeaders} key={`total-session-${index}`}>
                                 <b>
                                   <CurrencyFormatter value={rowValues[index]} currency={'USD'} disabled/>
                                 </b>

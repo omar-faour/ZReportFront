@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import {supabase} from "../../Configs/supabase"
 
-import CircularProgress from '@mui/material/CircularProgress';
-import Box from '@mui/material/Box'
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -11,12 +11,13 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
-import Typography from '@mui/material/Typography';
 import { makeStyles } from "@mui/styles";
 
 import CurrencyFormatter from '../CurrencyFormatter'
 
 import { toBeSavedState } from "../../states";
+
+
 
   
   const useStyles=makeStyles({
@@ -33,9 +34,7 @@ import { toBeSavedState } from "../../states";
     const [rowHeaders, setRowHeaders] = useState([]); 
     const [totalRowHeaders, setTotalRowHeaders] = useState([]); 
     const [rows, setRows] = useState([]); 
-    const [currencies, setCurrencies] = useState([]);
-    const [selectedDate, setSelectedDate] = useState(null);
-    const toBeSaved = toBeSavedState.useState(s=>s.systemData)
+    const tableRef = useRef(null)
 
     let values = {fields: [], totals: []};
 
@@ -50,22 +49,22 @@ import { toBeSavedState } from "../../states";
         let amount_2;
 
         if(rowHeader.currency.id === 1){
-            const {data: rate_value, error} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
+            const {data: rate_value, } = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
             updatedDetails['amount_f'] = parseFloat(targetValue)
             updatedDetails['amount_1'] = parseFloat(targetValue)
             updatedDetails['amount_2'] = parseFloat(targetValue) * parseFloat(rate_value[0].rate);
         }else if(rowHeader.currency.id === 2){
-            const {data: rate_value, error} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
+            const {data: rate_value, } = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
             updatedDetails['amount_f'] = parseFloat(targetValue)
             updatedDetails['amount_2'] = parseFloat(targetValue)
             updatedDetails['amount_1'] = parseFloat(targetValue)/parseFloat(rate_value[0].rate);
         }else if(rowHeader.currency.id !== 1 && rowHeader.currency.id !== 1){
-            const {data: rate_1_value, error} = await supabase.from('exchanges').select('*').eq('currency', rowHeader.currency.id).lte('date', row.z_date).order('date', {ascending:false}).limit(1);;
+            const {data: rate_1_value, } = await supabase.from('exchanges').select('*').eq('currency', rowHeader.currency.id).lte('date', row.z_date).order('date', {ascending:false}).limit(1);;
             amount_1 = parseFloat(targetValue)/rate_1_value;
-            const {data: rate_2_value, error: rate_2_Error} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
+            const {data: rate_2_value,} = await supabase.from('exchanges').select('*').eq('currency', 2).lte('date', row.z_date).order('date', {ascending:false}).limit(1);
             if(rate_2_value){
-                const rate_2_value = rate_2_value[0].rate;
-                amount_2 = amount_1 * rate_2_value;
+                
+                amount_2 = amount_1 * rate_2_value[0].rate;
 
                 updatedDetails['amount_f'] = parseFloat(targetValue)
                 updatedDetails['amount_1'] = amount_1
@@ -136,11 +135,10 @@ import { toBeSavedState } from "../../states";
 
         (async ()=>{
 
-          const {data: paymentsData, error: paymentsError} = await supabase.from('payment_types').select('*, type_of(*)').not('type_of', 'is', null)
+          const {data: paymentsData,} = await supabase.from('payment_types').select('*, type_of(*)').not('type_of', 'is', null)
             if(paymentsData){
-              const {data: currencyData, error: currencyError} = await supabase.from('currencies').select('*').in('id', (await supabase.from('countries').select('*').eq('id', store.country)).data[0].currencies)
+              const {data: currencyData,} = await supabase.from('currencies').select('*').in('id', (await supabase.from('countries').select('*').eq('id', store.country)).data[0].currencies)
               if(currencyData){
-                setCurrencies(currencyData)
                 let array = [];
                 paymentsData.map(payment=>{
                   return currencyData.map(currency=>{
@@ -150,7 +148,9 @@ import { toBeSavedState } from "../../states";
                 setRowHeaders([...array])
               }
             }
+          })(),
 
+        (async ()=>{
           const {data: paymentTypesData, error: paymentTypesError} = await supabase.from('payment_types').select('*, type_of(*)').is('type_of', null)
               if(paymentTypesData){
                 let array =[];
@@ -163,15 +163,20 @@ import { toBeSavedState } from "../../states";
               if(paymentTypesError){
                 console.log("paymentDataError: ", paymentTypesError)
               }
+        })(),
 
-          await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
+        (async ()=>{
+          zheader && await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
             if(data) setRows(data)
           });
-          const z_details = supabase.from('z_details').on('*', async payload=>{
+        })(),
+          
+        (async ()=>{
+          zheader && supabase.from('z_details').on('*', async payload=>{
             await supabase.from('z_details').select('*, ptid(*), zheader: zheader_id(*), rate: rate(*)').eq('zheader_id', zheader).then(({data})=>{
+              console.log("LOAD: ", payload)
               if(data){
-                console.log("CHANGES");
-                setRows(data);
+                setRows([...data]);
               }
               // setSavedChanges(true);
             });
@@ -186,31 +191,22 @@ import { toBeSavedState } from "../../states";
     }
 
    
-    useEffect(()=>{
-      fetchData()
-    },[selectedStore])
-
-    useEffect(()=>{
-      console.log(toBeSaved)
-    }, [toBeSaved])
+    useEffect(fetchData,[selectedStore])
 
 
     return (
       <Box sx={{padding: '10px 0'}}>
         {
           loading ? 
-          // <Box sx={{position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)'}}>
-          //   <CircularProgress />
-          // </Box>
           <Skeleton variant="rectangular" height={400} />
           :<>
           <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'center'}}>
-              <TableContainer component={Paper}>
+              <TableContainer component={Paper} ref={tableRef}>
                 <Table size="small" sx={{ minWidth: 650 }} aria-label="simple table">
                   <TableHead>
                     <TableRow hover className={classes.tableHeaders}>
                       <TableCell></TableCell>
-                      {sessions?.map(session=>(<TableCell>{session.session_name}</TableCell>))}
+                      {sessions?.map((session, index)=>(<TableCell key={`session-name-${index}`}>{session.session_name}</TableCell>))}
                       <TableCell>TOTAL</TableCell>
                     </TableRow>
                   </TableHead>
@@ -218,17 +214,16 @@ import { toBeSavedState } from "../../states";
                     {rowHeaders.map((rowHeader, index)=>{
                       let rowValues = [];
                       return (
-                      <TableRow hover>
+                      <TableRow hover key={`header-${index}`}>
                         <TableCell width={200}>
                           {rowHeader?.payment?.type} ({rowHeader?.currency?.code})
                         </TableCell>
                         
-                          {sessions.map(session=>{
-                            
+                          {sessions.map((session, index)=>{
                             const row = rows.find(row=>row.ptid.id === rowHeader.payment.id && row.cid === rowHeader.currency.id && row.session_id === session.session_id)
                             rowValues.push(row?.amount_f ??  0)
                               return (
-                                <TableCell>
+                                <TableCell key={`session-${index}`}>
                                   <CurrencyFormatter onChange={(e)=>onChange(e, row, rowHeader, session)} setRows={setRows} row={row} value={row?.amount_f ?? 0} currency={rowHeader?.currency?.code ?? 'USD'}/>
                                 </TableCell>
                               )
@@ -247,10 +242,10 @@ import { toBeSavedState } from "../../states";
                       )
                     })}
 
-                    {totalRowHeaders.map(totalRow=>{
+                    {totalRowHeaders.map((totalRow,index)=>{
                       let rowValues =[];
                      return (
-                       <TableRow hover>
+                       <TableRow hover key={`total-header-${index}`}>
                          <TableCell>
                            <b>{totalRow.payment.type} (Total)</b>
                          </TableCell>
@@ -263,7 +258,7 @@ import { toBeSavedState } from "../../states";
                             })
                             rowValues.push(sum);
                             return(
-                              <TableCell className={classes.tableHeaders}>
+                              <TableCell className={classes.tableHeaders} key={`session-${index}`}>
                                 <b>
                                   <CurrencyFormatter value={rowValues[index]} currency={'USD'} disabled/>
                                 </b>
@@ -293,7 +288,7 @@ import { toBeSavedState } from "../../states";
                           sum+=values.totals[i][index];
                         }
                         return (
-                          <TableCell>
+                          <TableCell key={`total-session-${index}`}>
                             <b>
                               <CurrencyFormatter value={sum} currency={'USD'} disabled/>
                             </b>

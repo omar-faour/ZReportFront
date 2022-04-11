@@ -10,7 +10,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
 
 
@@ -29,7 +28,7 @@ const useStyles=makeStyles({
 
 const BankDetails = (props)=>{
 
-    const {store, selectedStore, sessions, zheader} = props;
+    const {selectedStore, sessions, zheader} = props;
 
     const classes = useStyles();
     const [loading, setLoading] = useState(true);
@@ -63,7 +62,6 @@ const BankDetails = (props)=>{
     }
 
     const fetchData = async ()=>{
-        console.log("Banking")
         Promise.allSettled([
 
             (async()=>{
@@ -71,12 +69,12 @@ const BankDetails = (props)=>{
                     if(data) setBanks(data);
                 });
 
-                await supabase.from('z_bank_details').select('*').then(({data})=>{
+                zheader && await supabase.from('z_bank_details').select('*').eq('zheader_id', zheader).then(({data})=>{
                     if(data) setRows(data);
                 });
 
-                const z_bank_details = supabase.from('z_bank_details').on('*', async payload=>{
-                    await supabase.from('z_bank_details').select('*').then(({data})=>{
+                zheader && supabase.from('z_bank_details').on('*', async payload=>{
+                    await supabase.from('z_bank_details').eq('zheader_id', zheader).select('*').then(({data})=>{
                         if(data) setRows(data);
                     });    
                 }).subscribe()
@@ -87,9 +85,7 @@ const BankDetails = (props)=>{
         })
     }
 
-    useEffect(()=>{
-        fetchData();
-    }, [selectedStore])
+    useEffect(fetchData, [selectedStore])
     
 
     return (
@@ -103,22 +99,22 @@ const BankDetails = (props)=>{
                                         <TableCell width={200}></TableCell>
                                         {banks?.map((bank,index)=>{
                                             bankSummations[index] = 0;
-                                            return <TableCell>{bank.description}</TableCell>
+                                            return <TableCell key={`bank-name-${index}`}>{bank.description}</TableCell>
                                         })}
                                         <TableCell><b>TOTAL</b></TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {sessions?.map((session)=>{
+                                    {sessions?.map((session, index)=>{
                                         const sessionRows = rows.filter(row=>row.session_id === session.session_id)
                                         let sessionSum = 0;
-                                        return <TableRow>
+                                        return <TableRow key={`session-sum-${index}`}>
                                             <TableCell width={200}>{session.session_name}</TableCell>
                                             {banks?.map((bank,index)=>{
                                                 const row = sessionRows.find(row=>row.bank_id === bank.id)
                                                 bankSummations[index] += row?.value || 0
                                                 sessionSum += row?.value || 0
-                                                return <TableCell><CurrencyFormatter onChange={(e)=>onChange(e, row, session, bank)} value={row?.value || 0}/></TableCell>
+                                                return <TableCell key={`bank-total-${index}`}><CurrencyFormatter onChange={(e)=>onChange(e, row, session, bank)} value={row?.value || 0}/></TableCell>
                                             })}
                                             <TableCell className={classes.tableHeaders}><CurrencyFormatter value={sessionSum} disabled/></TableCell>
                                         </TableRow>
@@ -127,7 +123,7 @@ const BankDetails = (props)=>{
                                     <TableRow>
                                         <TableCell><b>Total</b></TableCell>
                                         {banks.map((bank,index)=>{
-                                            return <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations[index]} disabled/></TableCell>
+                                            return <TableCell className={classes.tableHeaders} key={`total-bank-${index}`}><CurrencyFormatter value={bankSummations[index]} disabled/></TableCell>
                                         })}
                                         <TableCell className={classes.tableHeaders}><CurrencyFormatter value={bankSummations.reduce((partialSum, a) => partialSum + a, 0)} disabled/></TableCell>
                                     </TableRow>

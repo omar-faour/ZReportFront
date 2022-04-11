@@ -3,21 +3,17 @@ import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import Box from '@mui/material/Box';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Skeleton from '@mui/material/Skeleton';
 
 
 import {supabase} from "../../Configs/supabase"
 
-import CurrencyFormatter from '../CurrencyFormatter';
 import getSymbolFromCurrency from 'currency-symbol-map';
 
 
@@ -74,7 +70,6 @@ const SummaryDetails = (props)=> {
     
     
     
-
     const fetchData = async ()=>{
         Promise.allSettled([
 
@@ -97,14 +92,14 @@ const SummaryDetails = (props)=> {
                 })
             })(),
 
-            (async ()=>{
-                const {data, error} = await supabase.from('z_header').select('*').eq('id', zheader);
+            zheader && (async ()=>{
+                const {data} = await supabase.from('z_header').select('*').eq('id', zheader);
                 if(data){
                     setZheaderDetails(data[0]);
                 }
             })(),
 
-            (async ()=>{
+            zheader && (async ()=>{
                 const {data, error} = await supabase.from('z_details').select('*').eq('zheader_id', zheader);
                 if(data){
                     setZDetails(data);
@@ -114,7 +109,7 @@ const SummaryDetails = (props)=> {
                 }
             })(),
 
-            (async ()=>{
+            zheader && (async ()=>{
                 const {data, error} = await supabase.from('z_physical_cards').select('*').eq('zheader_id', zheader);
                 if(data){
                     setZPhysicalCards(data);
@@ -124,8 +119,8 @@ const SummaryDetails = (props)=> {
                 }
             })(),
             
-            (async ()=>{
-                const {data, error} = await supabase.from('z_physical_pbp').select('*');
+            zheader && (async ()=>{
+                const {data, error} = await supabase.from('z_physical_pbp').select('*').eq('zheader_id', zheader);
                 if(data){
                     setZPhysicalPayByPhone(data);
                 }
@@ -134,8 +129,8 @@ const SummaryDetails = (props)=> {
                 }
             })(),
             
-            (async ()=>{
-                const {data, error} = await supabase.from('z_physical_cash').select('*, rate(*)');
+            zheader && (async ()=>{
+                const {data, error} = await supabase.from('z_physical_cash').select('*, rate(*)').eq('zheader_id', zheader);
                 if(data){
                     setZPhysicalCash(data);
                 }
@@ -143,8 +138,8 @@ const SummaryDetails = (props)=> {
                     console.log(error);
                 }
             })(),
-            (async ()=>{
-                const {data, error} = await supabase.from('z_physical_cash_out').select('*, rate(*)');
+            zheader && (async ()=>{
+                const {data, error} = await supabase.from('z_physical_cash_out').select('*, rate(*)').eq('zheader_id', zheader);
                 if(data){
                     setZPhysicalCashOut(data);
                 }
@@ -152,8 +147,8 @@ const SummaryDetails = (props)=> {
                     console.log(error);
                 }
             })(),
-            (async ()=>{
-                const {data, error} = await supabase.from('z_physical_cash_in').select('*, rate(*)');
+            zheader && (async ()=>{
+                const {data, error} = await supabase.from('z_physical_cash_in').select('*, rate(*)').eq('zheader_id', zheader);
                 if(data){
                     setZPhysicalCashIn(data);
                 }
@@ -182,8 +177,8 @@ const SummaryDetails = (props)=> {
                 }
             })(),
 
-            (async ()=>{
-                const {data, error} = await supabase.from('z_pbp_details').select('*');
+            zheader && (async ()=>{
+                const {data, error} = await supabase.from('z_pbp_details').select('*').eq('zheader_id', zheader);
                 if(data){
                     setZPayByPhoneDetails(data);
                 }
@@ -192,8 +187,8 @@ const SummaryDetails = (props)=> {
                 }
             })(),
             
-            (async ()=>{
-                const {data, error} = await supabase.from('z_bank_details').select('*');
+            zheader && (async ()=>{
+                const {data, error} = await supabase.from('z_bank_details').select('*').eq('zheader_id', zheader);
                 if(data){
                     setZBankDetails(data);
                 }
@@ -204,12 +199,11 @@ const SummaryDetails = (props)=> {
         ]).finally(()=>{
             setLoading(false)
         })
-    }
+    } 
 
-
-    useEffect(()=>{
-        fetchData();
-    },[])
+    
+    
+    useEffect(fetchData, [])
   
 
   return (
@@ -225,126 +219,127 @@ const SummaryDetails = (props)=> {
       >
         <DialogTitle id="scroll-dialog-title">Summary</DialogTitle>
         <DialogContent dividers>
-          <DialogContentText
+          {/* <DialogContentText
             id="scroll-dialog-description"
             tabIndex={-1}
-          >{loading? <Skeleton variant="text" width={200} height={40}/>:
-            <Box>
+          > */}
+              {loading? <Skeleton variant="text" width={200} height={40}/>:
+            
                 <TableContainer>
                     <Table size='small'>
                         <TableBody>
-                            <TableRow hover>
+                            <TableRow hover key='target'>
                                 <TableCell><b>Target</b></TableCell>
                                 <TableCell>{currency}{(zheaderDetails.target)?.toLocaleString('en-US')}</TableCell>
                             </TableRow>
-                            <TableRow hover>
+                            <TableRow hover key='total-sales'>
                                 <TableCell><b>Total Sales</b></TableCell>
                                 <TableCell>{currency}{totalSales.toLocaleString('en-US')}</TableCell>
                             </TableRow >
-                            <TableRow hover>
+                            <TableRow hover key='net-sales'>
                                 <TableCell><b>Net Sales</b></TableCell>
                                 <TableCell>{currency}{netSales.toLocaleString('en-US')}</TableCell>
                             </TableRow>
-                            <TableRow hover>
+                            <TableRow hover key='vat'>
                                 <TableCell><b>VAT</b></TableCell>
                                 <TableCell>{currency}{vat.toLocaleString('en-US')}</TableCell>
                             </TableRow>
-                            <TableRow hover>
+                            <TableRow hover key='total-qty'>
                                 <TableCell><b>Total Qty.</b></TableCell>
                                 <TableCell>{zheaderDetails?.total_quantity}</TableCell>
                             </TableRow>
-                            <TableRow hover>
+                            <TableRow hover key='upt'>
                                 <TableCell><b>UPT</b></TableCell>
                                 <TableCell>{UPT}</TableCell>
                             </TableRow>
-                            <TableRow hover>
+                            <TableRow hover key='atv'>
                                 <TableCell><b>ATV</b></TableCell>
                                 <TableCell>{currency}{ATV.toLocaleString('en-US')}</TableCell>
                             </TableRow>
                             
                             <TableRow><TableCell colSpan={2}></TableCell></TableRow>
 
-                            <TableRow hover>
+                            <TableRow hover key='conversion'>
                                 <TableCell><b>Conversion %</b></TableCell>
                                 <TableCell>{conversion_percentage}%</TableCell>
                             </TableRow>
 
                             <TableRow><TableCell colSpan={2}></TableCell></TableRow>
 
-                            <TableRow hover>
+                            <TableRow hover key='cash-sales'>
                                 <TableCell><b>Cash Sales (From Z-Report)</b></TableCell>
                                 <TableCell>{currency}{zCashSales.toLocaleString('en-US')}</TableCell>
                             </TableRow>
                           
-                            <TableRow hover>
+                            <TableRow hover key='visa'>
                                 <TableCell><b>Visa</b></TableCell>
                                 <TableCell>{currency}{zPhysialVisaTotal.toLocaleString('en-US')}</TableCell>
                             </TableRow>
                             
-                            <TableRow hover>
+                            <TableRow hover key='master'>
                                 <TableCell><b>Master</b></TableCell>
                                 <TableCell>{currency}{zPhysialMasterTotal.toLocaleString('en-US')}</TableCell>
                             </TableRow>
                             
-                            <TableRow hover>
+                            <TableRow hover key='other-cards'>
                                 <TableCell><b>Other Cards</b></TableCell>
                                 <TableCell>{currency}{zPhysialOtherCardsTotal.toLocaleString('en-US')}</TableCell>
                             </TableRow>
 
-                            <TableRow hover>
+                            <TableRow hover key='pbp'>
                                 <TableCell><b>Pay By Phone</b></TableCell>
                                 <TableCell>{currency}{zPhysicalPayByPhoneTotal.toLocaleString('en-US')}</TableCell>
                             </TableRow>
 
-                            <TableRow hover>
+                            <TableRow hover key='cards-total'>
                                 <TableCell><b>( Credit / Debit ) Cards Total</b></TableCell>
                                 <TableCell>{currency}{zCardsTotal.toLocaleString('en-US')}</TableCell>
                             </TableRow>
                             
                             
-                            <TableRow hover>
+                            <TableRow hover key='banking-amount'>
                                 <TableCell><b>Banking amount (Physical)</b></TableCell>
                                 <TableCell>{currency}{zPhysicalCashTotal.toLocaleString('en-US')}</TableCell>
                             </TableRow>
                             
-                            <TableRow hover>
+                            <TableRow hover key='pbp-diff'>
                                 <TableCell><b>Pay By Phone Difference</b></TableCell>
                                 <TableCell>{currency}{payByPhoneDifference.toLocaleString('en-US')}</TableCell>
                             </TableRow>
                             
-                            <TableRow hover>
+                            <TableRow hover key='cash-diff'>
                                 <TableCell><b>Cash Difference</b></TableCell>
                                 <TableCell>{currency}{cashDifference.toLocaleString('en-US')}</TableCell>
                             </TableRow>
                             
-                            <TableRow hover>
+                            <TableRow hover key='cards-diff'>
                                 <TableCell><b>Cards Difference</b></TableCell>
                                 <TableCell>{currency}{cardsDifference.toLocaleString('en-US')}</TableCell>
                             </TableRow>
                             
-                            <TableRow hover>
+                            <TableRow hover key='total-diff'>
                                 <TableCell><b>Total Difference</b></TableCell>
                                 <TableCell>{currency}{totalDifference.toLocaleString('en-US')}</TableCell>
                             </TableRow>
 
                             <TableRow><TableCell colSpan={2}></TableCell></TableRow>
 
-                            {pbpBanks.map(bank=>{
+                            {pbpBanks.map((bank,index)=>{
                                 const bankRows = zPayByPhoneDetails.filter(row=>row.pay_by_phone_id === bank.id);
                                 const total = bankRows.reduce((partialSum, a) => partialSum + a.value, 0);
                                 return (
-                                <TableRow>
+                                <TableRow key={`pbp-total-${index}`}>
                                     <TableCell><b>{bank.description}</b></TableCell>
                                     <TableCell>{currency}{total.toLocaleString('en-US')}</TableCell>
                                 </TableRow>
                                 )
                             })}
 
-                            {cardBanks.map(bank=>{
+                            {cardBanks.map((bank,index)=>{
                                 const bankRows = zBankDetails.filter(row=>row.bank_id === bank.id);
                                 const total = bankRows.reduce((partialSum, a) => partialSum + a.value, 0);
                                 return (
-                                <TableRow hover>
+                                <TableRow hover key={`card-total-${index}`}>
                                     <TableCell><b>{bank.description}</b></TableCell>
                                     <TableCell>{currency}{total.toLocaleString('en-US')}</TableCell>
                                 </TableRow>
@@ -353,8 +348,8 @@ const SummaryDetails = (props)=> {
                         </TableBody>
                     </Table>
                 </TableContainer>
-            </Box>}
-          </DialogContentText>
+            }
+          {/* </DialogContentText> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleModal}>Close</Button>

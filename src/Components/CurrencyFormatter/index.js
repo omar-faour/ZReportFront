@@ -1,15 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import TextField from '@mui/material/TextField'
-import { makeStyles } from '@mui/styles';
 import NumberFormat from 'react-number-format';
 import getSymbolFromCurrency from 'currency-symbol-map';
-
-import {supabase} from '../../Configs/supabase';
-
-const useStyles = makeStyles({
-    
-})
 
 
 
@@ -38,7 +31,6 @@ const NumberFormatCustom = React.forwardRef(function NumberFormatCustom(props, r
 
 const CurrencyFormatter = (props)=>{
     const { value = 0, currency = 'USD', disabled = false, onChange=()=>{}, isCurrency = true} = props;
-    const classes = useStyles();
         
     return (
 

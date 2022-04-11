@@ -4,7 +4,6 @@ import Box from '@mui/material/Box';
 import TableContainer from '@mui/material/TableContainer';
 import Table from '@mui/material/Table';
 import TableHead from '@mui/material/TableHead';
-import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
@@ -22,13 +21,12 @@ const DatePicker = ({value, onChange})=>{
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DesktopDatePicker
-                label="Date desktop"
+                label="Date"
                 inputFormat="yyyy-MM-dd"
                 mask='____-__-__'
                 value={value}
                 onChange={onChange}
                 renderInput={(params) => <TextField variant='standard' {...params}  />}
-                
             />
         </LocalizationProvider>
     )
@@ -43,7 +41,7 @@ const HeaderDetails = (props)=>{
 
     const fetchData = ()=>{
         Promise.allSettled([
-            (async ()=>{
+            zheader && (async ()=>{
                 await supabase.from('z_header').select('*').eq('id', zheader).then(({data})=>{
                     if(data){
                         setHeaderData(data[0]);
@@ -82,9 +80,7 @@ const HeaderDetails = (props)=>{
         // });
     }
 
-    useEffect(()=>{
-        fetchData();
-    }, [selectedStore]);
+    useEffect(fetchData, [selectedStore]);
 
 
     return (

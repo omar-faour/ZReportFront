@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:4000",
   "dependencies": {
     "@date-io/date-fns": "^2.13.1",
     "@emotion/react": "^11.8.2",
@@ -13,6 +14,7 @@
     "@mui/styles": "^5.5.1",
     "@supabase/supabase-js": "^1.31.0",
     "@supabase/ui": "^0.36.4",
+    "axios": "^0.26.1",
     "currency-symbol-map": "^5.0.1",
     "dotenv": "^16.0.0",
     "handsontable": "^11.1.0",
