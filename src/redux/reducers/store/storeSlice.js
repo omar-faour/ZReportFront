@@ -4,20 +4,28 @@ import { createSlice } from '@reduxjs/toolkit';
 export const storeSlice = createSlice({
   name: 'store',
   initialState: {
+    store: null,
     selectedStore: null
   },
   reducers: {
-    selectStore: (state, action) => {
-      console.log("SELECT STORE: ", action.payload)
+    setStore: (state, action) => {
       return {
-          selectedStore: action.payload,
+        ...state,
+          store: action.payload,
+        }
+      },
+      setSelectedStore: (state, action)=>{
+        return {
+          ...state,
+          selectedStore: action.payload
         }
       }
     },
+    
 
 })
 
 // Action creators are generated for each case reducer function
-export const { selectStore } = storeSlice.actions
+export const { setStore, setSelectedStore } = storeSlice.actions
 
 export default storeSlice.reducer

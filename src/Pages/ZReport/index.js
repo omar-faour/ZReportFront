@@ -27,6 +27,8 @@ import SummaryDetails from '../../Components/SummaryDetails';
 import {storeState, selectedStoreState, zheaderIdState, selectedDateState, toBeSavedState} from '../../states';
 import {supabase} from "../../Configs/supabase"
 
+import {useSelector, useDispatch} from 'react-redux';
+
 
 
 const useStyles = makeStyles({
@@ -48,10 +50,14 @@ const ZReport = (props)=>{
   const [changesCounter, setChangesCounter] = useState(0);
   const [savingChanges, setSavingChanges] = useState(false);
   const [openSummary, setOpenSummary] = useState(false);
-  const selectedStore = selectedStoreState.useState(s=>s);
-  const zheader_id = zheaderIdState.useState(s=>s);
-  const store = storeState.useState(s=>s);
-  const selectedDate = selectedDateState.useState(s=>s)
+  // const selectedStore = selectedStoreState.useState(s=>s);
+  const selectedStore = useSelector(state=>state.store.selectedStore);
+  // const zheader_id = zheaderIdState.useState(s=>s);
+  const zheader_id = useSelector(state=>state.data.zheaderId);
+  // const store = storeState.useState(s=>s);
+  const store = useSelector(state=>state.store.store);
+  // const selectedDate = selectedDateState.useState(s=>s)
+  const selectedDate = useSelector(state=>state.data.selectedDate)
   const toBeSaved = toBeSavedState.useState(s=>s);
   const classes = useStyles();
   
@@ -385,7 +391,7 @@ const ZReport = (props)=>{
 
 
         (async()=>{
-          const {data: sessionsData, error: sessionsError} = await supabase.from('sessions').select('session_id: id, session_name: name').eq('store_code', selectedStore)
+          const {data: sessionsData, error: sessionsError} = await supabase.from('sessions').select('session_id: id, session_name: name').eq('store_code', selectedStore.code_2)
           if(sessionsData){
             let array = [];
             sessionsData.map(session=>array.push(session));
@@ -423,7 +429,7 @@ const ZReport = (props)=>{
       <>
         <Box sx={{display:'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
           <Typography variant="h4" gutterBottom component="div">
-            {selectedStore} | {selectedDate}
+            {selectedStore.code_2} | {selectedDate}
           </Typography>
           <Box>
             <Button onClick={handleOpenSummary}>
@@ -443,7 +449,7 @@ const ZReport = (props)=>{
 
         </Box>
         <Box>
-          <HeaderDetails selectedStore={selectedStore} zheader={zheader_id} />
+          <HeaderDetails selectedStore={selectedStore.code_2} zheader={zheader_id} />
 
           <Accordion TransitionProps={{mountOnEnter: true}}>
             <AccordionSummary>
@@ -454,7 +460,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <SystemData store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
+              <SystemData store={store} selectedStore={selectedStore.code_2} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -467,7 +473,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalCards store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
+              <PhysicalCards store={store} selectedStore={selectedStore.code_2} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -480,7 +486,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalCash store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
+              <PhysicalCash store={store} selectedStore={selectedStore.code_2} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -493,7 +499,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalCashOut store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
+              <PhysicalCashOut store={store} selectedStore={selectedStore.code_2} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -506,7 +512,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalCashIn store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
+              <PhysicalCashIn store={store} selectedStore={selectedStore.code_2} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
           
@@ -519,7 +525,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PhysicalPayByPhone store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
+              <PhysicalPayByPhone store={store} selectedStore={selectedStore.code_2} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
           
@@ -532,7 +538,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <BankDetails store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
+              <BankDetails store={store} selectedStore={selectedStore.code_2} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
 
@@ -545,7 +551,7 @@ const ZReport = (props)=>{
               </Box>
             </AccordionSummary>
             <AccordionDetails>
-              <PayByPhoneDetails store={store} selectedStore={selectedStore} sessions={sessions} zheader={zheader_id}  />
+              <PayByPhoneDetails store={store} selectedStore={selectedStore.code_2} sessions={sessions} zheader={zheader_id}  />
             </AccordionDetails>
           </Accordion>
           

@@ -17,7 +17,6 @@ exports.get_cities = (req, res)=>{
             if(error){
                 reject(error);
             }
-            console.log(result.rows)
             resolve(result.rows);
         })
     })
@@ -29,7 +28,6 @@ exports.get_city = (req, res)=>{
             if(error){
                 reject(error);
             }
-            console.log(result)
             resolve(result.rows);
         })
     })

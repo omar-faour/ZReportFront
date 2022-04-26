@@ -17,7 +17,7 @@ router.get('/list',  (req, res) => {
 });
 
 router.get('/',  (req, res) => {
-    get_country(req, res)
+    get_store(req, res)
     .then(result=> res.status(200).send(result))
     .catch(err=>console.log(err));
 });

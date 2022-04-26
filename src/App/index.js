@@ -1,5 +1,4 @@
 import React from 'react';
-import { Typography as Typo, Button } from '@supabase/ui';
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
@@ -10,9 +9,11 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
 import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -20,13 +21,17 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import MailIcon from '@mui/icons-material/Mail';
+import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
+import PersonAdd from '@mui/icons-material/PersonAdd';
+import Settings from '@mui/icons-material/Settings';
+import Logout from '@mui/icons-material/Logout';
 
 import HomeScreen from '../Pages/HomeScreen'
 import ZReport from '../Pages/ZReport';
 
 import useUser from '../Utils/useUser';
-import {logout} from '../redux/reducers/auth/authSlice';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
+import {setStore} from '../redux/reducers/store/storeSlice';
 
 import {
   Switch,
@@ -36,7 +41,6 @@ import {
   Redirect
 } from "react-router-dom";
 
-import {selectedDateState, zheaderIdState} from '../states'
 import {routes} from '../routs';
 
 const drawerWidth = 240;
@@ -44,11 +48,19 @@ const drawerWidth = 240;
 const ProfileMenu = (props) =>{
     const {user, logout} = useUser();
     return (
-      <Box sx={{padding: 5}}>
-        <Typo.Text>{user.email}</Typo.Text>
-        <Button block onClick={logout}>
-          Sign out
-        </Button>
+      <Box sx={{minWidth: '150px'}}>
+        <MenuItem>
+          <ListItemIcon>
+            <Settings fontSize="small" />
+          </ListItemIcon>
+          Settings
+        </MenuItem>
+        <MenuItem onClick={logout}>
+          <ListItemIcon>
+            <Logout fontSize="small" />
+          </ListItemIcon>
+          Logout
+        </MenuItem>
       </Box>
     )
 }
@@ -124,10 +136,13 @@ const App = (props) => {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = React.useState(false);
-  const selectedDate = selectedDateState.useState(s=>s);
-  const zheaderId = zheaderIdState.useState(s=>s);
+  // const selectedDate = selectedDateState.useState(s=>s);
+  const selectedDate = useSelector(state=>state.data.selectedDate);
+  // const zheaderId = zheaderIdState.useState(s=>s);
+  const zheaderId = useSelector(state=>state.data.zheaderId);
   const dispatch = useDispatch();
   let location = useLocation();
+  const {user} = useUser();
 
   
   const handleProfileMenu = ()=>{
@@ -166,7 +181,7 @@ const App = (props) => {
             <Box sx={{cursor: 'pointer', display: 'flex', flexDirection: 'row', alignItems: 'center', alignContent: 'center'}}>
               <Tooltip title="Profile">
                 <IconButton onClick= {handleProfileMenu}>
-                  <Avatar />
+                  <Avatar >{user.email[0]}</Avatar>
                 </IconButton>
               </Tooltip>
                 <Menu
@@ -185,7 +200,7 @@ const App = (props) => {
                   open={profileMenuOpen}
                   onClose={handleProfileMenu}
                 >
-                    <ProfileMenu supabaseClient={props.supabaseClient}/>
+                    <ProfileMenu />
                 </Menu>
             </Box>
           </Box>
@@ -223,6 +238,28 @@ const App = (props) => {
               <ListItemText primary={route.text ?? `route ${index}`} sx={{ opacity: open ? 1 : 0 }} />
             </ListItemButton>
           ))}
+            <ListItemButton
+              key={'cs'}
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? 'initial' : 'center',
+                px: 2.5,
+              }}
+              // component={Link}
+              // to={route.path}
+              onClick={()=>dispatch(setStore(null))}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: open ? 3 : 'auto',
+                  justifyContent: 'center',
+                }}
+              >
+                {<ChangeCircleIcon/>}
+              </ListItemIcon>
+              <ListItemText primary={"Change Store"} sx={{ opacity: open ? 1 : 0 }} />
+            </ListItemButton>
         </List>
         
       </Drawer>

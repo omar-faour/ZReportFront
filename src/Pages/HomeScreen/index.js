@@ -35,9 +35,11 @@ import {useHistory} from 'react-router-dom';
 import {format} from 'date-fns';
 
 import { supabase } from '../../Configs/supabase';
-import {storeState, selectedStoreState, zheaderIdState, selectedDateState} from '../../states';
+import {zheaderIdState, selectedDateState} from '../../states';
 
 import {useDispatch, useSelector} from 'react-redux';
+import {setSelectedDate, setZHeaderId} from '../../redux/reducers/data/dataSlice'
+import axios from 'axios';
 
 
 const useStyles = makeStyles({
@@ -56,14 +58,18 @@ const AccordionList = ({list = []})=>{
   
     const [expanded, setExpanded] = useState(null);
     let history = useHistory();
+    const dispatch = useDispatch();
 
     const handleExpand = (key)=>{
         setExpanded(expanded === key ? null : key)
     }
 
     const setHeader = (headerId, headerDate) => {
-        zheaderIdState.update(s=>s=headerId);
-        selectedDateState.update(s=>s=headerDate)
+        console.log(headerId, headerDate)
+        dispatch(setZHeaderId(headerId));
+        // zheaderIdState.update(s=>s=headerId);
+        dispatch(setSelectedDate(headerDate.split('T')[0]));
+        // selectedDateState.update(s=>s=headerDate)
         history.push('/ZReport')
     }
 
@@ -75,7 +81,7 @@ const AccordionList = ({list = []})=>{
                         <Box sx={{display:'flex', flexDirection: 'row' ,justifyContent:'space-between'}}>
                             <Box sx={{display:'flex', flexDirection: 'row'}}>
                                 <Typography variant="h6" gutterBottom component="div" sx={{ paddingLeft: '20px' }}>
-                                    {item?.date}
+                                    {item?.date.split('T')[0]}
                                 </Typography>
                                 <Button onClick={()=>setHeader(item?.id, item?.date)}>
                                     View
@@ -132,10 +138,11 @@ const HomeScreen = (props)=>{
     const [zHeaders, setZHeaders] = useState([]);
     const [newModalOpen, setNewModalOpen] = useState(false);
     const [newHeaderDate, setNewHeaderDate] = useState(new Date());
-    const store = useSelector(state=>state.store.selectedStore);
-    const selectedStore = selectedStoreState.useState(s=>s);
+    const store = useSelector(state=>state.store.store);
+    const selectedStore = useSelector(state=>state.store.selectedStore);
     
     let history = useHistory();
+    const dispatch = useDispatch();
 
 
     
@@ -151,16 +158,10 @@ const HomeScreen = (props)=>{
     const fetchData = ()=>{
 
         Promise.allSettled([
-            (async ()=>{
-                const {data: storeData,} = await supabase.from('stores').select('*').eq('id', store.store)
-                if(storeData){
-                  selectedStoreState.update(s=>s=storeData[0].code_2)
-                }
-            })(),
 
             (async ()=>{
-               selectedStore && await supabase.from('z_header').select('*').eq('store_code', selectedStore).order('date', {ascending: false}).then(({data})=>{
-                    if(data) setZHeaders(data)
+               selectedStore && await axios.get('/api/zheaders/list', {params: {store_code: selectedStore.code_2}}).then(result=>{
+                   setZHeaders(result.data)
                })
             })()
         ]).finally(()=>{
@@ -176,8 +177,10 @@ const HomeScreen = (props)=>{
     const handleAddHeader = async ()=>{
         await supabase.from('z_header').insert({date: newHeaderDate.toISOString().split('T')[0], store_code: selectedStore}).then(({data, error})=>{
             if(data){
-                zheaderIdState.update(s=>s=data[0]?.id);
-                selectedDateState.update(s=>s=data[0]?.date)
+                // zheaderIdState.update(s=>s=data[0]?.id);
+                dispatch(setZHeaderId(data[0]?.id))
+                // selectedDateState.update(s=>s=data[0]?.date)
+                dispatch(setSelectedDate(data[0]?.date.split('T')[0]))
                 history.push('/ZReport')
             }
             if(error) console.log(error)
@@ -193,14 +196,14 @@ const HomeScreen = (props)=>{
             <Box>
                 <Box sx={{display:'flex', flexDirection:'row', justifyContent:'space-between', alignItems: 'center'}}>
                     <Typography variant="h4" gutterBottom component="div">
-                        Z-Headers ({selectedStore})
+                        Z-Headers ({selectedStore.code_2})
                     </Typography>
                     <Button variant='outlined' startIcon={<AddIcon />} onClick={handleNewButton}>
                         New
                     </Button>
                 </Box>
                 <Box>
-                    {zHeaders.length ? <AccordionList list={zHeaders}/> : Array.from(Array(10)).map((_,index)=><Skeleton key={index} sx={{marginBottom: 1, borderRadius: 2}} variant='rectangular' height={50}/>)}
+                    {zHeaders.length > 0 ? <AccordionList list={zHeaders}/> : Array.from(Array(10)).map((_,index)=><Skeleton key={index} sx={{marginBottom: 1, borderRadius: 2}} variant='rectangular' height={50}/>)}
                 </Box>
             </Box>
             }

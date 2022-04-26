@@ -15,9 +15,10 @@ import useUser from '../../Utils/useUser';
 
 const Container = (props)=>{
   const {user, isLoggedIn} = useUser();
+  const store = useSelector(state=>state.store.store);
   if(isLoggedIn){
     return(
-      user.access?.stores?.length > 1 ? <CheckStore/> : <App />
+      store? <App/> : <CheckStore/>
     )
   }
   return props.children
@@ -32,6 +33,7 @@ const Auth = () => {
   const signingIn = useSelector(state=>state.auth.signingIn);
   const credentialsError = useSelector(state=>state.auth.isError);
   const credentialsErrorMesage = useSelector(state=>state.auth.error);
+  const state=useSelector(state=>state);
 
   const onChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
@@ -48,6 +50,10 @@ const Auth = () => {
       setDisabledButton(true);
     }
   }, [credentials]);
+
+  useEffect(()=>{
+    console.log("STATE: ", state )
+  })
 
   return (
     <Container>

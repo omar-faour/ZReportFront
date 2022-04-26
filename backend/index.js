@@ -15,6 +15,7 @@ const login = require('./routes/login');
 const countries = require('./routes/countries');
 const cities = require('./routes/cities');
 const stores = require('./routes/stores');
+const zheaders = require('./routes/zheaders');
 
 
 app.use('/api/zdetails', zdetails);
@@ -28,6 +29,7 @@ app.use('/api/zphysicalcashsout', zphysicalcashsout);
 app.use('/api/countries', countries)
 app.use('/api/cities', cities)
 app.use('/api/stores', stores)
+app.use('/api/zheaders', zheaders)
 app.use('/api/auth/signin', login)
 // app.get('/', (req, res) => {
 //     return new Promise((resolve, reject)=>{

@@ -17,7 +17,6 @@ exports.get_stores = (req, res)=>{
             if(error){
                 reject(error);
             }
-            console.log(result.rows)
             resolve(result.rows);
         })
     })

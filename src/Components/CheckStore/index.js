@@ -15,7 +15,7 @@ import {useHistory} from 'react-router-dom';
 
 
 import {useSelector, useDispatch} from 'react-redux';
-import {selectStore} from '../../redux/reducers/store/storeSlice';
+import {setStore, setSelectedStore} from '../../redux/reducers/store/storeSlice';
 import useUser from '../../Utils/useUser';
 import axios from 'axios';
 
@@ -65,8 +65,10 @@ const SelectStore = (props)=>{
     }
 
     const onSubmit = ()=>{
-        history.push('/')
-        dispatch(selectStore(selectedLevels));
+        dispatch(setStore(selectedLevels));
+        dispatch(setSelectedStore(levels.stores.find(store=>store.id === selectedLevels.store)));
+        // history.push('/ZReport');
+
     }
 
 
@@ -74,15 +76,14 @@ const SelectStore = (props)=>{
        
 
         if(user.access){
-            const countries = (await axios.get('/api/countries/list', {params:{array_list: user.access.countries}}).catch(e=>console.log(e))).data
-            const cities = (await axios.get('/api/cities/list', {params:{array_list: user.access.cities}}).catch(e=>console.log(e))).data
-            const stores = (await axios.get('/api/stores/list', {params:{array_list: user.access.stores}}).catch(e=>console.log(e))).data
+            const countries = await (await axios.get('/api/countries/list', {params:{array_list: user.access.countries}})).data
+            const cities = await (await axios.get('/api/cities/list', {params:{array_list: user.access.cities}})).data
+            const stores = await (await axios.get('/api/stores/list', {params:{array_list: user.access.stores}})).data
             setLevels({countries, cities, stores});
             if(countries.length === 1 && cities.length === 1 && stores.length === 1){
-                console.log(levels);
-                // setSelectedLevels({country: countries[0], city: cities[0], store: stores[0]});
-                dispatch(selectStore({country: countries[0].id, city: cities[0].id, store: stores[0].id}))
-                onSubmit()
+                //setSelectedLevels({country: countries[0], city: cities[0], store: stores[0]});
+                dispatch(setStore({country: countries[0].id, city: cities[0].id, store: stores[0].id}))
+                dispatch(setSelectedStore(stores[0]));
             }else{
 
                 setSelectedLevels({country: countries[0].id, city: cities[0].id, store: stores[0].id});
