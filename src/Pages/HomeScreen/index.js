@@ -37,6 +37,8 @@ import {format} from 'date-fns';
 import { supabase } from '../../Configs/supabase';
 import {storeState, selectedStoreState, zheaderIdState, selectedDateState} from '../../states';
 
+import {useDispatch, useSelector} from 'react-redux';
+
 
 const useStyles = makeStyles({
     viewCenter: {
@@ -130,7 +132,7 @@ const HomeScreen = (props)=>{
     const [zHeaders, setZHeaders] = useState([]);
     const [newModalOpen, setNewModalOpen] = useState(false);
     const [newHeaderDate, setNewHeaderDate] = useState(new Date());
-    const store = storeState.useState(s=>s);
+    const store = useSelector(state=>state.store.selectedStore)
     const selectedStore = selectedStoreState.useState(s=>s);
     
     let history = useHistory();

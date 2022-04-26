@@ -12,9 +12,12 @@ import { makeStyles } from '@mui/styles';
 
 import {useHistory} from 'react-router-dom';
 
-import {supabase} from '../../Configs/supabase';
 
-import {storeState} from '../../states'
+
+import {useSelector, useDispatch} from 'react-redux';
+import {selectStore} from '../../redux/reducers/store/storeSlice';
+import useUser from '../../Utils/useUser';
+import axios from 'axios';
 
 
 const useStyles = makeStyles({
@@ -39,8 +42,8 @@ const useStyles = makeStyles({
 const SelectStore = (props)=>{
     const classes = useStyles();
     const history = useHistory();
-
-    const user = supabase.auth.user();
+    const dispatch = useDispatch()
+    const {user, logout} = useUser()
 
     const [loading, setLoading] = useState(true);
 
@@ -57,31 +60,29 @@ const SelectStore = (props)=>{
     });
 
 
-
     const onLevelChange = (e)=>{
         setSelectedLevels({...selectedLevels, [e.target.name]: e.target.value});
     }
 
     const onSubmit = ()=>{
-        history.push('/ZReport')
-        storeState.update(s=>s=selectedLevels);
+        history.push('/')
+        dispatch(selectStore(selectedLevels));
     }
 
 
     const checkUserLevels = async ()=>{
-        const user_access_level = (await supabase.from('user_access').select('*').eq('user_id', user.id)).data
        
 
-        if(user_access_level){
-            const countries = (await supabase.from('countries').select('*').in('id', user_access_level[0].countries)).data
-            const cities = (await supabase.from('cities').select('*').in('id', user_access_level[0].cities)).data
-            const stores = (await supabase.from('stores').select('*').in('id', user_access_level[0].stores)).data
+        if(user.access){
+            const countries = (await axios.get('/api/countries/list', {params:{array_list: user.access.countries}}).catch(e=>console.log(e))).data
+            const cities = (await axios.get('/api/cities/list', {params:{array_list: user.access.cities}}).catch(e=>console.log(e))).data
+            const stores = (await axios.get('/api/stores/list', {params:{array_list: user.access.stores}}).catch(e=>console.log(e))).data
             setLevels({countries, cities, stores});
             if(countries.length === 1 && cities.length === 1 && stores.length === 1){
+                console.log(levels);
                 // setSelectedLevels({country: countries[0], city: cities[0], store: stores[0]});
-                storeState.update(s=>s={country: countries[0].id, city: cities[0].id, store: stores[0].id});
-                // history.push('/ZReport')
-                history.push('/')
+                dispatch(selectStore({country: countries[0].id, city: cities[0].id, store: stores[0].id}))
+                onSubmit()
             }else{
 
                 setSelectedLevels({country: countries[0].id, city: cities[0].id, store: stores[0].id});
@@ -92,12 +93,11 @@ const SelectStore = (props)=>{
     }
 
     useEffect(checkUserLevels,[])
-
     
     return (
         <>
         <Box sx={{position: 'absolute', top: '10px', right: '10px'}}>
-            <Button onClick={()=>supabase.auth.signOut()} variant='outlined'>Signout</Button>
+            <Button onClick={logout} variant='outlined'>Signout</Button>
         </Box>
         <Grid className={classes.viewCenter} container justifyContent='center'>
             {   loading ? 

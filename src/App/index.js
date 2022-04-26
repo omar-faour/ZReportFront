@@ -1,12 +1,5 @@
-// import React, { useState, useEffect } from 'react';
-import { Typography as Typo, Button } from '@supabase/ui';
-
-
-
-
-
-
 import React from 'react';
+import { Typography as Typo, Button } from '@supabase/ui';
 import { styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
@@ -31,6 +24,10 @@ import MailIcon from '@mui/icons-material/Mail';
 import HomeScreen from '../Pages/HomeScreen'
 import ZReport from '../Pages/ZReport';
 
+import useUser from '../Utils/useUser';
+import {logout} from '../redux/reducers/auth/authSlice';
+import {useDispatch} from 'react-redux';
+
 import {
   Switch,
   Route,
@@ -45,11 +42,11 @@ import {routes} from '../routs';
 const drawerWidth = 240;
 
 const ProfileMenu = (props) =>{
-    const user = props.supabaseClient.auth.user()
+    const {user, logout} = useUser();
     return (
       <Box sx={{padding: 5}}>
         <Typo.Text>{user.email}</Typo.Text>
-        <Button block onClick={() => props.supabaseClient.auth.signOut()}>
+        <Button block onClick={logout}>
           Sign out
         </Button>
       </Box>
@@ -129,7 +126,9 @@ const App = (props) => {
   const [profileMenuOpen, setProfileMenuOpen] = React.useState(false);
   const selectedDate = selectedDateState.useState(s=>s);
   const zheaderId = zheaderIdState.useState(s=>s);
+  const dispatch = useDispatch();
   let location = useLocation();
+
   
   const handleProfileMenu = ()=>{
     setProfileMenuOpen(!profileMenuOpen);

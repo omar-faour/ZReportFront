@@ -15,7 +15,7 @@ import { makeStyles } from "@mui/styles";
 
 import CurrencyFormatter from '../CurrencyFormatter'
 
-import { toBeSavedState, selectedDateState } from "../../states";
+import { toBeSavedState } from "../../states";
 
 
 
@@ -35,7 +35,6 @@ import { toBeSavedState, selectedDateState } from "../../states";
     const [totalRowHeaders, setTotalRowHeaders] = useState([]); 
     const [rows, setRows] = useState([]); 
     const tableRef = useRef(null)
-    const z_date = selectedDateState.useState(s=>s);
 
     let values = {fields: [], totals: []};
 
@@ -87,6 +86,7 @@ import { toBeSavedState, selectedDateState } from "../../states";
           // }
 
       }else if(!row && targetValue && targetValue !== 0){
+        let z_date = new Date().toISOString().split('T')[0]
         let newData = {
           z_date: z_date,
           session_id: session.session_id,

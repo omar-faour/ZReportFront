@@ -1,55 +1,106 @@
-import React from 'react';
-import { Auth } from '@supabase/ui';
-import Grid from '@mui/material/Grid';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import React, { useState, useEffect } from "react";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from '@mui/material/Alert';
 
+import CheckStore from '../../Components/CheckStore';
 import App from '../../App';
-import CheckStore from '../../Components/CheckStore'
-import Login from '../../Components/Login'
-import Signup from '../../Components/signup'
-
-import {storeState} from '../../states'
+import {useSelector, useDispatch} from 'react-redux';
+import {login} from '../../redux/actions/auth/authActions';
+import useUser from '../../Utils/useUser';
 
 
-const theme = createTheme({
-  palette:{
-    primary:{
-      main: 'rgba(36,180,126)',
-      contrastText: '#fff'
-    },
-  }
-});
-
-
-
-const Container = (props) => {
-  const { user } = Auth.useUser()
-  // const user = JSON.parse(localStorage.getItem('z-user'))
-  const store = storeState.useState(s=>s);
-  if (user)
-    return (
-      store ? 
-      <App supabaseClient={props.supabaseClient} />:
-      <CheckStore />
+const Container = (props)=>{
+  const {user, isLoggedIn} = useUser();
+  if(isLoggedIn){
+    return(
+      user.access?.stores?.length > 1 ? <CheckStore/> : <App />
     )
+  }
   return props.children
 }
 
-export default function AuthBasic({supabaseClient}) {
+
+
+const Auth = () => {
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const [disabledButton, setDisabledButton] = useState(true);
+  const dispatch = useDispatch();
+  const signingIn = useSelector(state=>state.auth.signingIn);
+  const credentialsError = useSelector(state=>state.auth.isError);
+  const credentialsErrorMesage = useSelector(state=>state.auth.error);
+
+  const onChange = (e) => {
+    setCredentials({ ...credentials, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = () => {
+      dispatch(login(credentials));
+  };
+
+  useEffect(() => {
+    if (credentials.email.length > 0 && credentials.password.length > 0) {
+      setDisabledButton(false);
+    } else {
+      setDisabledButton(true);
+    }
+  }, [credentials]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <Auth.UserContextProvider supabaseClient={supabaseClient}>
-        <Container supabaseClient={supabaseClient}>
-          <Grid direction="row" container justifyContent="center" alignItems='center' height='100vh' padding={5}>
-              <Grid item xs = {12} md = {4}>
-                <Auth supabaseClient={supabaseClient} />
-                {/* <Login /> */}
-                {/* <Signup /> */}
-              </Grid>
-          </Grid>
-        </Container>
-      </Auth.UserContextProvider>
-    </ThemeProvider>
-  )
-}
+    <Container>
+      <Box
+        sx={{
+          marginTop: 8,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
+        }}
+      >
+        <Typography component="h1" variant="h5">
+          Sign in
+        </Typography>
+        
+        <Box sx={{ mt: 1 }}>
+          {credentialsError && <Alert  severity="warning">{credentialsErrorMesage}</Alert>}
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            onChange={onChange}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            type="password"
+            id="password"
+            autoComplete="current-password"
+            onChange={onChange}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            disabled={disabledButton || signingIn}
+            onClick={handleSubmit}
+            sx={{ mt: 3, mb: 2 }}
+          >
+            {signingIn ? <> <CircularProgress sx={{marginRight: 1}} size={20}/> Signing in... </> : "Sign In"}
+          </Button>
+        </Box>
+      </Box>
+    </Container>
+  );
+};
+
+export default Auth;
