@@ -132,7 +132,7 @@ const HomeScreen = (props)=>{
     const [zHeaders, setZHeaders] = useState([]);
     const [newModalOpen, setNewModalOpen] = useState(false);
     const [newHeaderDate, setNewHeaderDate] = useState(new Date());
-    const store = useSelector(state=>state.store.selectedStore)
+    const store = useSelector(state=>state.store.selectedStore);
     const selectedStore = selectedStoreState.useState(s=>s);
     
     let history = useHistory();
